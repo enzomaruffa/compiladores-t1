@@ -18,6 +18,7 @@ int num_vars;
 %token T_LABEL
 %token T_TYPE
 %token T_ARRAY
+%token T_OF
 %token T_VAR
 %token T_PROCEDURE
 %token T_FUNCTION

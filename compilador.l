@@ -68,6 +68,13 @@ array {
     return T_ARRAY;
  }
 
+of { 
+    simbolo = simb_of;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME("of ");
+    return T_OF;
+ }
+
 var {
     simbolo = simb_var;
     strncpy (token, yytext, TAM_TOKEN);

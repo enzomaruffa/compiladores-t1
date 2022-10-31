@@ -19,6 +19,7 @@ typedef enum simbolos
   simb_label,
   simb_type,
   simb_array,
+  simb_of,
   simb_var,
   simb_procedure,
   simb_function,
