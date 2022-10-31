@@ -14,15 +14,15 @@ int num_vars;
 
 %}
 
-%token PROGRAM 
+%token PROGRAM
 %token LABEL
 %token TYPE
-%token ARRAY 
+%token ARRAY
 %token VAR
-%token PROCEDURE 
+%token PROCEDURE
 %token FUNCTION
-%token T_BEGIN 
-%token T_END 
+%token T_BEGIN
+%token T_END
 %token GOTO
 %token IF
 %token THEN
@@ -36,13 +36,13 @@ int num_vars;
 %token DIV
 %token NOT
 %token ATRIBUICAO
-%token PONTO_E_VIRGULA 
-%token DOIS_PONTOS 
-%token VIRGULA 
+%token PONTO_E_VIRGULA
+%token DOIS_PONTOS
+%token VIRGULA
 %token PONTO
-%token ABRE_PARENTESES 
+%token ABRE_PARENTESES
 %token FECHA_PARENTESES
-%token IDENT 
+%token IDENT
 
 %%
 
