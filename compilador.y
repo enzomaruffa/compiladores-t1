@@ -14,44 +14,44 @@ int num_vars;
 
 %}
 
-%token PROGRAM
-%token LABEL
-%token TYPE
-%token ARRAY
-%token VAR
-%token PROCEDURE
-%token FUNCTION
+%token T_PROGRAM
+%token T_LABEL
+%token T_TYPE
+%token T_ARRAY
+%token T_VAR
+%token T_PROCEDURE
+%token T_FUNCTION
 %token T_BEGIN
 %token T_END
-%token GOTO
-%token IF
-%token THEN
-%token ELSE
-%token WHILE
-%token DO
-%token MAIS
-%token MENOS
-%token OR
-%token VEZES
-%token DIV
-%token NOT
-%token ATRIBUICAO
-%token PONTO_E_VIRGULA
-%token DOIS_PONTOS
-%token VIRGULA
-%token PONTO
-%token ABRE_PARENTESES
-%token FECHA_PARENTESES
-%token IDENT
+%token T_GOTO
+%token T_IF
+%token T_THEN
+%token T_ELSE
+%token T_WHILE
+%token T_DO
+%token T_MAIS
+%token T_MENOS
+%token T_OR
+%token T_VEZES
+%token T_DIV
+%token T_NOT
+%token T_ATRIBUICAO
+%token T_PONTO_E_VIRGULA
+%token T_DOIS_PONTOS
+%token T_VIRGULA
+%token T_PONTO
+%token T_ABRE_PARENTESES
+%token T_FECHA_PARENTESES
+%token T_IDENT
 
 %%
 
 programa    :{
              geraCodigo (NULL, "INPP");
              }
-             PROGRAM IDENT
-             ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-             bloco PONTO {
+             T_PROGRAM T_IDENT
+             T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
+             bloco T_PONTO {
              geraCodigo (NULL, "PARA");
              }
 ;
@@ -71,7 +71,7 @@ parte_declara_vars:  var
 ;
 
 
-var         : { } VAR declara_vars
+var         : { } T_VAR declara_vars
             |
 ;
 
@@ -80,23 +80,23 @@ declara_vars: declara_vars declara_var
 ;
 
 declara_var : { }
-              lista_id_var DOIS_PONTOS
+              lista_id_var T_DOIS_PONTOS
               tipo
               { /* AMEM */
               }
-              PONTO_E_VIRGULA
+              T_PONTO_E_VIRGULA
 ;
 
-tipo        : IDENT
+tipo        : T_IDENT
 ;
 
-lista_id_var: lista_id_var VIRGULA IDENT
+lista_id_var: lista_id_var T_VIRGULA T_IDENT
               { /* insere �ltima vars na tabela de s�mbolos */ }
-            | IDENT { /* insere vars na tabela de s�mbolos */}
+            | T_IDENT { /* insere vars na tabela de s�mbolos */}
 ;
 
-lista_idents: lista_idents VIRGULA IDENT
-            | IDENT
+lista_idents: lista_idents T_VIRGULA T_IDENT
+            | T_IDENT
 ;
 
 
