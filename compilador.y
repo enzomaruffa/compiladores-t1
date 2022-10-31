@@ -47,48 +47,47 @@ int num_vars;
 
 %%
 
-programa    :{
-             geraCodigo (NULL, "INPP");
-             }
-             T_PROGRAM T_IDENT
-             T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
-             bloco T_PONTO {
-             geraCodigo (NULL, "PARA");
-             }
+programa:   {
+               geraCodigo (NULL, "INPP");
+            }
+            T_PROGRAM T_IDENT
+            T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
+            bloco T_PONTO 
+            {
+               geraCodigo (NULL, "PARA");
+            }
 ;
 
-bloco       :
-              parte_declara_vars
-              {
-              }
+bloco:
+      parte_declara_vars
+      {
 
-              comando_composto
-              ;
-
-
-
+      }
+      comando_composto
+;
 
 parte_declara_vars:  var
 ;
 
 
-var         : { } T_VAR declara_vars
-            |
+var:  { } T_VAR declara_vars
+      |
 ;
 
 declara_vars: declara_vars declara_var
             | declara_var
 ;
 
-declara_var : { }
-              lista_id_var T_DOIS_PONTOS
-              tipo
-              { /* AMEM */
-              }
-              T_PONTO_E_VIRGULA
+declara_var:   { }
+               lista_id_var T_DOIS_PONTOS
+               tipo
+               {
+                  /* AMEM */
+               }
+               T_PONTO_E_VIRGULA
 ;
 
-tipo        : T_IDENT
+tipo: T_IDENT
 ;
 
 lista_id_var: lista_id_var T_VIRGULA T_IDENT
@@ -102,8 +101,22 @@ lista_idents: lista_idents T_VIRGULA T_IDENT
 
 
 comando_composto: T_BEGIN comandos T_END
+;
 
-comandos:
+comandos: expr
+;
+
+expr: expr T_MAIS termo {printf ("+"); }
+    | expr T_MENOS termo {printf ("-"); }
+    | termo
+;
+
+termo: termo T_VEZES fator  {printf ("*");}|
+     | termo T_DIV fator  {printf ("/"); }
+     | fator
+;
+
+fator      : T_IDENT {printf ("A"); }
 ;
 
 
