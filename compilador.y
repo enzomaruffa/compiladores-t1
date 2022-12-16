@@ -47,76 +47,105 @@ int num_vars;
 
 %%
 
-programa:   {
-               geraCodigo (NULL, "INPP");
-            }
-            T_PROGRAM T_IDENT
-            T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
-            bloco T_PONTO 
-            {
-               geraCodigo (NULL, "PARA");
-            }
+programa:
+   {
+      geraCodigo (NULL, "INPP");
+   }
+   T_PROGRAM T_IDENT
+   T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
+   bloco T_PONTO
+   {
+      geraCodigo (NULL, "PARA");
+   }
 ;
 
 bloco:
-      parte_declara_vars
-      {
-
-      }
-      comando_composto
+   parte_declara_vars
+   { }
+   comando_composto
 ;
 
-parte_declara_vars:  var
-;
-
-
-var:  { } T_VAR declara_vars
-      |
-;
-
-declara_vars: declara_vars declara_var
-            | declara_var
-;
-
-declara_var:   { }
-               lista_id_var T_DOIS_PONTOS
-               tipo
-               {
-                  /* AMEM */
-               }
-               T_PONTO_E_VIRGULA
-;
-
-tipo: T_IDENT
-;
-
-lista_id_var: lista_id_var T_VIRGULA T_IDENT
-              { /* insere �ltima vars na tabela de s�mbolos */ }
-            | T_IDENT { /* insere vars na tabela de s�mbolos */}
-;
-
-lista_idents: lista_idents T_VIRGULA T_IDENT
-            | T_IDENT
+parte_declara_vars:
+   var
 ;
 
 
-comando_composto: T_BEGIN comandos T_END
+var:
+   { } 
+   T_VAR declara_vars
+   |
 ;
 
-comandos: expr
+declara_vars:
+   declara_vars declara_var
+   | declara_var
 ;
 
-expr: expr T_MAIS termo {printf ("+"); }
-    | expr T_MENOS termo {printf ("-"); }
-    | termo
+declara_var:
+   { }
+   lista_id_var T_DOIS_PONTOS
+   tipo
+   {
+      /* AMEM */
+      alocar_vars_pendentes();
+   }
+   T_PONTO_E_VIRGULA
 ;
 
-termo: termo T_VEZES fator  {printf ("*");}|
-     | termo T_DIV fator  {printf ("/"); }
-     | fator
+tipo:
+   T_IDENT
 ;
 
-fator      : T_IDENT {printf ("A"); }
+lista_id_var:
+   lista_id_var T_VIRGULA T_IDENT {
+      adiciona_var(token);
+      incrementa_aloc_pendentes();
+   }
+   | T_IDENT {
+      adiciona_var(token);
+      incrementa_aloc_pendentes();
+   }
+;
+
+lista_idents:
+   lista_idents T_VIRGULA T_IDENT
+   | T_IDENT
+;
+
+
+comando_composto:
+   T_BEGIN comandos T_END
+;
+
+comandos:
+   comando T_PONTO_E_VIRGULA comandos
+   | comando T_PONTO_E_VIRGULA
+   | comando
+   |
+;
+
+comando:
+   T_IDENT { } atribuicao
+;
+
+atribuicao:
+   T_ATRIBUICAO expr { geraCodigo(NULL, token); }
+;
+
+expr:
+   expr T_MAIS termo { geraCodigo(NULL, "+"); }
+   | expr T_MENOS termo { geraCodigo(NULL, "-"); }
+   | termo
+;
+
+termo:
+   termo T_VEZES fator  { geraCodigo(NULL, "*"); }
+   | termo T_DIV fator  { geraCodigo(NULL, "/"); }
+   | fator
+;
+
+fator:
+   T_IDENT { geraCodigo(NULL, "TODO_IDENT"); }
 ;
 
 
@@ -141,6 +170,7 @@ int main (int argc, char** argv) {
 /* -------------------------------------------------------------------
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
+   inicia_vars_compilador();
 
    yyin=fp;
    yyparse();

@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.sql": "jinja-sql",
+    "simbolo.h": "c",
+    "pilha.h": "c"
+  }
+}
