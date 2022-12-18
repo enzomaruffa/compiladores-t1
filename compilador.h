@@ -38,6 +38,7 @@ typedef enum simbolos
   simb_mais,
   simb_menos,
   simb_or,
+  simb_and,
   simb_vezes,
   simb_div,
   simb_not,
@@ -50,6 +51,12 @@ typedef enum simbolos
   simb_ponto,
   simb_virgula,
   simb_identificador,
+  simb_igual,
+  simb_dif,
+  simb_menor,
+  simb_maior,
+  simb_menor_igual,
+  simb_maior_igual
 } simbolos;
 
 /* -------------------------------------------------------------------

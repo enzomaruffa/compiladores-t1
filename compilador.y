@@ -33,6 +33,7 @@ int num_vars;
 %token T_MAIS
 %token T_MENOS
 %token T_OR
+%token T_AND
 %token T_VEZES
 %token T_DIV
 %token T_NOT
@@ -43,8 +44,14 @@ int num_vars;
 %token T_PONTO
 %token T_ABRE_PARENTESES
 %token T_FECHA_PARENTESES
+%token T_NUMERO
 %token T_IDENT
-
+%token T_IGUAL
+%token T_DIF
+%token T_MENOR
+%token T_MAIOR
+%token T_MENOR_IGUAL
+%token T_MAIOR_IGUAL
 %%
 
 programa:
@@ -129,23 +136,61 @@ comando:
 ;
 
 atribuicao:
-   T_ATRIBUICAO expr { geraCodigo(NULL, token); }
+   T_ATRIBUICAO expr
 ;
 
 expr:
-   expr T_MAIS termo { geraCodigo(NULL, "+"); }
-   | expr T_MENOS termo { geraCodigo(NULL, "-"); }
+   expr_simples
+   /* | expr_simples relacao expr_simples */
+;
+
+expr_simples:
+   termo_com_sinal lista_op_termos
+;
+
+termo_com_sinal:
+   T_MAIS termo
+   | T_MENOS termo
    | termo
 ;
 
+lista_op_termos:
+   lista_op_termos op_termo
+   | op_termo
+   |
+;
+
+op_termo:
+   T_MAIS termo { geraCodigo(NULL, "SOMA"); }
+   | T_MENOS termo { geraCodigo(NULL, "SUBT"); }
+   | T_OR termo { geraCodigo(NULL, "DISJ"); }
+;
+
 termo:
-   termo T_VEZES fator  { geraCodigo(NULL, "*"); }
-   | termo T_DIV fator  { geraCodigo(NULL, "/"); }
-   | fator
+   fator
+   | termo op_fator
+;
+
+op_fator:
+   T_VEZES fator { geraCodigo(NULL, "MULT"); }
+   | T_DIV fator { geraCodigo(NULL, "DIVI"); }
+   | T_AND fator { geraCodigo(NULL, "CONJ"); }
 ;
 
 fator:
-   T_IDENT { geraCodigo(NULL, "TODO_IDENT"); }
+   T_IDENT { /* carrega variavel */ }
+   | T_NUMERO { /* carrega uma constante load_value(token); */ }
+   | T_ABRE_PARENTESES expr T_FECHA_PARENTESES
+   | T_NOT fator
+;
+
+relacao:
+   T_IGUAL { save_relation(simb_igual); }
+   | T_DIF { save_relation(simb_dif); }
+   | T_MENOR { save_relation(simb_menor); }
+   | T_MAIOR { save_relation(simb_maior); }
+   | T_MENOR_IGUAL { save_relation(simb_menor_igual); }
+   | T_MAIOR_IGUAL { save_relation(simb_maior_igual); }
 ;
 
 

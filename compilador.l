@@ -174,6 +174,13 @@ or {
     return T_OR;
  }
 
+and {
+    simbolo = simb_and;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME("and  ");
+    return T_AND;
+ }
+
 \* {
     simbolo = simb_vezes;
     strncpy (token, yytext, TAM_TOKEN);
@@ -245,11 +252,61 @@ not {
     return T_FECHA_PARENTESES;
  }
 
+\= {
+    simbolo = simb_igual;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" igual  ");
+    return T_IGUAL;
+ }
+
+\<> {
+    simbolo = simb_dif;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" dif  ");
+    return T_DIF;
+ }
+
+\<= {
+    simbolo = simb_menor_igual;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" menor_igual  ");
+    return T_MENOR_IGUAL;
+ }
+
+\>= {
+    simbolo = simb_maior_igual;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" maior_igual  ");
+    return T_MAIOR_IGUAL;
+ }
+
+\< {
+    simbolo = simb_menor;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" menor  ");
+    return T_MENOR;
+ }
+
+\> {
+    simbolo = simb_maior;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" maior  ");
+    return T_MAIOR;
+ }
+
 {pulo_linha} {nl++;}
 
 {descarte}
 
 {comentario}
+
+{numero} { 
+    simbolo = simb_numero;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" numero ");
+    return T_NUMERO;
+ }
+
 
 {ident} {
     simbolo = simb_identificador;
