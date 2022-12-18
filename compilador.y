@@ -69,7 +69,7 @@ programa:
 bloco:
    parte_declara_vars
    { }
-   comando_composto
+   comando_composto { desalocar(); }
 ;
 
 parte_declara_vars:

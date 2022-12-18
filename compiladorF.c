@@ -27,6 +27,8 @@ simbolos simbolo, relacao;
 char token[TAM_TOKEN];
 
 int alocacoes_pendentes = 0;
+int nivel_lexico_atual = 0;
+int deslocamento_atual = 0;
 
 pilha_t *tabela_simbolos = NULL;
 
@@ -36,9 +38,7 @@ FILE* fp=NULL;
 
 // === PRIVADO ===
 
-int get_posicao_memoria_simbolo(simbolo_t *simbolo) {
-  return simbolo->variavel.deslocamento;
-}
+
 
 // === PUBLICO ===
 
@@ -66,8 +66,10 @@ void inicia_vars_compilador() {
 void registra_var(char* token) {
   simbolo_t* simbolo = criar_simbolo(token);
   simbolo->categoria = VARIAVEL_SIMPLES;
-  simbolo->nivel_lexico = 0;
-  simbolo->variavel.deslocamento = 0;
+  simbolo->nivel_lexico = nivel_lexico_atual;
+  simbolo->variavel.deslocamento = deslocamento_atual;
+  deslocamento_atual += 1;
+
   pilha_push(tabela_simbolos, simbolo);
 }
 
@@ -83,6 +85,22 @@ void alocar_vars_pendentes() {
   alocacoes_pendentes = 0;
 }
 
+void desalocar() { 
+  if (!deslocamento_atual) {
+    // Não temos nada alocado
+    return;
+  }
+
+  char comando[100];
+  sprintf(comando, "DMEM %d", deslocamento_atual);
+  geraCodigo(NULL, comando);
+
+  // Remover símbolos
+  for (int i = 0; i < deslocamento_atual; i++) {
+    pilha_pop(tabela_simbolos);
+  }
+}
+
 void carregar_constante(char* token) {
   char comando[100];
   sprintf(comando, "CRCT %s", token);
@@ -92,18 +110,26 @@ void carregar_constante(char* token) {
 void carregar_simbolo(char* token) {
   char comando[100];
   simbolo_t* simbolo = pilha_get_by_id(tabela_simbolos, token);
+
   if (simbolo == NULL) {
     char erro[100];
     sprintf(erro, "Variável não declarada: %s", token);
     imprimeErro(erro);
   }
 
-  sprintf(comando, "CRVL %d", get_posicao_memoria_simbolo(simbolo));
+  if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == FUNCAO) {
+    char erro[100];
+    sprintf(erro, "Procedimento ou função não pode ser usado como expressão: %s", token);
+    imprimeErro(erro);
+  }
+
+  sprintf(comando, "CRVL %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
   geraCodigo(NULL, comando);
 };
 
 void setar_identificador_esquerda(char* token) {
   simbolo_esquerda_atual = pilha_get_by_id(tabela_simbolos, token);
+
   if (simbolo_esquerda_atual == NULL) {
     char erro[100];
     sprintf(erro, "Variável não declarada: %s", token);
@@ -120,7 +146,7 @@ void armazenar_valor_identificador_esquerda() {
     imprimeErro(erro);
   }
 
-  sprintf(comando, "ARMZ %d", get_posicao_memoria_simbolo(simbolo_esquerda_atual));
+  sprintf(comando, "ARMZ %d,%d", simbolo_esquerda_atual->nivel_lexico, simbolo_esquerda_atual->variavel.deslocamento);
   geraCodigo(NULL, comando);
 
   simbolo_esquerda_atual = NULL;
