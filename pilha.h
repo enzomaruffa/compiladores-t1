@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "simbolo.h"
+#include "infos_compilador.h"
 
 typedef struct item_pilha {
     struct item_pilha *prev;
@@ -10,6 +11,7 @@ typedef struct item_pilha {
         int n_simbolos;
         char label[4];
         simbolo_t *simbolo;
+        infos_compilador_t *infos;
     };
 } item_pilha_t;
 
@@ -32,6 +34,10 @@ void simbolo_print(simbolo_t *s);
 void pilha_push_label(pilha_t *pilha, char *label);
 char* pilha_pop_label(pilha_t *pilha);
 char* pilha_peek_label(pilha_t *pilha);
+
+void pilha_push_infos(pilha_t *pilha, infos_compilador_t *infos);
+infos_compilador_t* pilha_pop_infos(pilha_t *pilha);
+infos_compilador_t* pilha_peek_infos(pilha_t *pilha);
 
 void pilha_push_n(pilha_t *pilha, int n_symbs);
 int pilha_pop_n(pilha_t *pilha);

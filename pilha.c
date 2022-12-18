@@ -1,8 +1,7 @@
 
 #include "pilha.h"
 
-// MARK: Pilha
-
+// MARK: Pilha genérica
 pilha_t* pilha_create(void) {
     pilha_t *new = malloc(sizeof(pilha_t));
     new->length = 0;
@@ -23,7 +22,6 @@ void pilha_print(pilha_t *pilha, void print(item_pilha_t*)) {
 }
 
 // MARK: Pilha de simbolos
-
 void pilha_push(pilha_t *pilha, simbolo_t *simbolo) {
     item_pilha_t *item = malloc(sizeof(item_pilha_t));
     item->simbolo = simbolo;
@@ -88,7 +86,6 @@ void simbolo_print(simbolo_t* s) {
 }
 
 // MARK: Label pilha
-
 void pilha_push_label(pilha_t *pilha, char *label) {
     item_pilha_t *item = malloc(sizeof(item_pilha_t));
     strcpy(item->label, label);
@@ -115,6 +112,37 @@ char* pilha_peek_label(pilha_t *pilha) {
     item_pilha_t *item = pilha->top;
     if (item) {
         return item->label;
+    } else {
+        return NULL;
+    }
+}
+
+// MARK: Pilha de infos
+void pilha_push_infos(pilha_t *pilha, infos_compilador_t *infos) {
+    item_pilha_t *item = malloc(sizeof(item_pilha_t));
+    item->infos = infos;
+    item->prev = pilha->top;
+    pilha->top = item;
+    pilha->length++;
+}
+
+infos_compilador_t* pilha_pop_infos(pilha_t *pilha) {
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        pilha->top = item->prev;
+        pilha->length--;
+        infos_compilador_t *infos = item->infos;
+        free(item);
+        return infos;
+    } else {
+        return NULL;
+    }
+}
+
+infos_compilador_t* pilha_peek_infos(pilha_t *pilha) {
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        return item->infos;
     } else {
         return NULL;
     }

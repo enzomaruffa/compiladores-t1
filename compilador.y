@@ -76,10 +76,18 @@ parametros_programa:
    T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES
    |
 
+lista_idents:
+   lista_idents T_VIRGULA T_IDENT
+   | T_IDENT
+;
+
 bloco:
    parte_declara_vars
-   { }
-   comando_composto { desalocar(); }
+   { comecar_bloco();}
+   parte_declara_subrots
+   { finalizar_bloco(); }
+   comando_composto
+   { desalocar(); }
 ;
 
 parte_declara_vars:
@@ -122,11 +130,16 @@ lista_id_var:
    }
 ;
 
-lista_idents:
-   lista_idents T_VIRGULA T_IDENT
-   | T_IDENT
-;
+parte_declara_subrots:
+   parte_declara_subrots declara_procedure T_PONTO_E_VIRGULA
+   |
 
+declara_procedure:
+   T_PROCEDURE T_IDENT { registrar_procedure(token); }
+   /* parametros_formais_procedure */
+   T_PONTO_E_VIRGULA
+   bloco
+   { voltar_procedure(); }
 
 comando_composto:
    T_BEGIN comandos T_END
@@ -140,16 +153,26 @@ comandos:
 ;
 
 comando:
-   T_IDENT { setar_identificador_esquerda(token); } atribuicao
-   | read
+   read
    | write
    | while
    | if
+   | comando_identificador_esquerda
 ;
+
+comando_identificador_esquerda:
+   T_IDENT { setar_identificador_esquerda(token); }
+   comando_identificador_esquerda_fim
+
+comando_identificador_esquerda_fim:
+   atribuicao
+   | chamada_procedure
 
 atribuicao:
    T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
-;
+
+chamada_procedure:
+   { chamar_procedure(); }
 
 read:
    T_READ T_ABRE_PARENTESES lista_read T_FECHA_PARENTESES

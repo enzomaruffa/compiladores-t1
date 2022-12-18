@@ -16,8 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
-#include "pilha.h"
 #include "simbolo.h"
+#include "infos_compilador.h"
+#include "pilha.h"
 
 /* -------------------------------------------------------------------
  *  variáveis globais
@@ -31,14 +32,15 @@ FILE* fp=NULL;
 // Pilhas
 pilha_t *tabela_simbolos = NULL;
 pilha_t *pilha_rotulos = NULL;
+pilha_t *pilha_subrotinas = NULL;
+pilha_t *pilha_infos = NULL;
 
 // Global
 int rotulos_criados = 0;
 
 // Frame atual
 int alocacoes_pendentes = 0;
-int nivel_lexico_atual = 0;
-int deslocamento_atual = 0;
+infos_compilador_t* infos_atuais;
 
 // Atribuiçao atual
 simbolo_t *simbolo_esquerda_atual = NULL;
@@ -68,6 +70,29 @@ void gera_armz(simbolo_t* simbolo) {
   geraCodigo(NULL, comando);
 }
 
+infos_compilador_t * criar_infos_compilador() {
+  infos_compilador_t *infos = malloc(sizeof(infos_compilador_t));
+  infos->nivel_lexico = 0;
+  infos->deslocamento = 0;
+  return infos;
+}
+
+void aumentar_nivel_lexico() {
+  pilha_push_infos(pilha_infos, infos_atuais);
+
+  infos_compilador_t *novas_infos = criar_infos_compilador();
+  novas_infos->nivel_lexico = infos_atuais->nivel_lexico + 1;
+  novas_infos->deslocamento = 0;
+
+  infos_atuais = novas_infos;
+}
+
+void diminuir_nivel_lexico() {
+  infos_compilador_t *infos_anteriores = pilha_pop_infos(pilha_infos); // TODO: pilha_pop(pilha_infos);
+  free(infos_atuais);
+  infos_atuais = infos_anteriores;
+}
+
 // === PUBLICO ===
 
 void geraCodigo (char* rot, char* comando) {
@@ -90,14 +115,17 @@ int imprimeErro ( char* erro ) {
 void inicia_vars_compilador() {
   tabela_simbolos = pilha_create();
   pilha_rotulos = pilha_create();
+  pilha_subrotinas = pilha_create();
+  pilha_infos = pilha_create();
+  infos_atuais = criar_infos_compilador();
 }
 
 void registra_var(char* token) {
   simbolo_t* simbolo = criar_simbolo(token);
   simbolo->categoria = VARIAVEL_SIMPLES;
-  simbolo->nivel_lexico = nivel_lexico_atual;
-  simbolo->variavel.deslocamento = deslocamento_atual;
-  deslocamento_atual += 1;
+  simbolo->nivel_lexico = infos_atuais->nivel_lexico;
+  simbolo->variavel.deslocamento = infos_atuais->deslocamento;
+  infos_atuais->deslocamento += 1;
 
   pilha_push(tabela_simbolos, simbolo);
 }
@@ -116,17 +144,17 @@ void alocar_vars_pendentes() {
 }
 
 void desalocar() { 
-  if (!deslocamento_atual) {
+  if (!infos_atuais->deslocamento) {
     // Não temos nada alocado
     return;
   }
 
   char comando[100];
-  sprintf(comando, "DMEM %d", deslocamento_atual);
+  sprintf(comando, "DMEM %d", infos_atuais->deslocamento);
   geraCodigo(NULL, comando);
 
   // Remover símbolos
-  for (int i = 0; i < deslocamento_atual; i++) {
+  for (int i = 0; i < infos_atuais->deslocamento; i++) {
     pilha_pop(tabela_simbolos);
   }
 }
@@ -207,9 +235,13 @@ void gerar_relacao() {
 void setar_identificador_esquerda(char* token) {
   simbolo_esquerda_atual = pilha_get_by_id(tabela_simbolos, token);
 
+  #ifdef DEBUG
+  printf("[setar_identificador_esquerda]: %s\n", token);
+  #endif
+
   if (simbolo_esquerda_atual == NULL) {
     char erro[100];
-    sprintf(erro, "Variável não declarada: %s", token);
+    sprintf(erro, "Símbolo não declarado: %s [setar_identificador_esquerda]", token);
     imprimeErro(erro);
   }
 }
@@ -219,7 +251,7 @@ void armazenar_valor_identificador_esquerda() {
 
   if (simbolo_esquerda_atual == NULL) {
     char erro[100];
-    sprintf(erro, "simbolo_esquerda_atual nulo. Erro interno do compilador.");
+    sprintf(erro, "simbolo_esquerda_atual nulo. Erro interno do compilador. [armazenar_valor_identificador_esquerda]");
     imprimeErro(erro);
   }
 
@@ -294,3 +326,95 @@ void finalizar_else() {
   geraCodigo(rotuloFim, "NADA");
 }
 
+// == Procedures
+void registrar_procedure(char* token) {
+  // TODO: Verificar se já existe?
+  // TODO: Verificar se é uma palavra reservada?
+
+  char *rotulo = malloc(10);
+  criar_proximo_rotulo(rotulo);
+
+  // Criar simbolo
+  simbolo_t *procedure = criar_simbolo(token);
+  procedure->categoria = PROCEDIMENTO;
+  procedure->nivel_lexico = infos_atuais->nivel_lexico;
+
+  procedure->procedimento.deslocamento = 0;
+  procedure->procedimento.primeiro_parametro = NULL;
+
+  strcpy(procedure->procedimento.rotulo, rotulo);
+
+  // Adicionar na tabela de símbolos
+  pilha_push(tabela_simbolos, procedure);
+
+  // Gerar código ({rótulo do procedure}, ENPR {nível léxico do procedure})
+  char comando[100];
+  sprintf(comando, "ENPR %d", infos_atuais->nivel_lexico);
+  geraCodigo(rotulo, comando);
+
+  // Coloca na pilha de subrotinas
+  pilha_push(pilha_subrotinas, procedure);
+}
+
+void comecar_bloco() {
+  // Criar rótulo de começo do bloco atual e colocar na pilha
+  char *rotuloBloco = malloc(10);
+  criar_proximo_rotulo(rotuloBloco);
+  pilha_push_label(pilha_rotulos, rotuloBloco);
+
+  // Gerar um DSVS pro rótulo do bloco atual
+  char comando[100];
+  sprintf(comando, "DSVS %s", rotuloBloco);
+  geraCodigo(NULL, comando);
+
+  // Incrementa o nivel léxico
+  aumentar_nivel_lexico();
+}
+
+void finalizar_bloco() {
+  // Tirar rótulo do bloco atual da pilha
+  char *rotuloBloco = pilha_pop_label(pilha_rotulos);
+
+  // Gerar código ({rótulo do bloco atual}, NADA)
+  geraCodigo(rotuloBloco, "NADA");
+
+  // Decrementa o nivel léxico
+  diminuir_nivel_lexico();
+}
+
+void chamar_procedure() {
+  // Pegar da tabela de simbolos
+  // Ver se é procedure de fato
+  // Realizar a chamada
+  // Gerar código (CHPR {rótulo do procedure} {nivel lexico do procedure})
+
+  #ifdef DEBUG
+  printf("[chamar_procedure] '%s', %d\n", simbolo_esquerda_atual->procedimento.rotulo, nivel_lexico_atual);
+  #endif
+
+  if (simbolo_esquerda_atual == NULL) {
+    char erro[100];
+    sprintf(erro, "Procedure não declarada. [chamar_procedure]");
+    imprimeErro(erro);
+  }
+
+  if (simbolo_esquerda_atual->categoria != PROCEDIMENTO) {
+    char erro[100];
+    sprintf(erro, "'%s' não é um procedure. [chamar_procedure]", token);
+    imprimeErro(erro);
+  }
+
+  char comando[100];
+  sprintf(comando, "CHPR %s %d", simbolo_esquerda_atual->procedimento.rotulo, simbolo_esquerda_atual->nivel_lexico);
+  geraCodigo(NULL, comando);
+}
+
+void voltar_procedure() {
+  // Desempilhar subrotina
+  simbolo_t *subrotina = pilha_pop(pilha_subrotinas);
+
+  // Gerar código (RTPR)
+  char comando[100];
+  sprintf(comando, "RTPR %d,%d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
+  geraCodigo(NULL, comando);
+}

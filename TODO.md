@@ -1,1 +1,4 @@
-- Support typing?
+- Support typing in conditions
+- Support type validation
+- Test nested IFs
+- Optimize blocks with no procedures defined (no need to DSVS to the next line)

@@ -71,6 +71,7 @@ extern int nivel_lexico;
 extern int desloc;
 extern int nl;
 
+
 /* -------------------------------------------------------------------
  * prototipos globais
  * ------------------------------------------------------------------- */
@@ -109,5 +110,11 @@ void finalizar_while();
 void avaliar_if();
 void finalizar_if();
 void finalizar_else();
+
+void registrar_procedure(char* token);
+void comecar_bloco();
+void finalizar_bloco();
+void chamar_procedure();
+void voltar_procedure();
 
 #endif
