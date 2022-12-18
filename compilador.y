@@ -54,6 +54,10 @@ int num_vars;
 %token T_MAIOR_IGUAL
 %token T_READ
 %token T_WRITE
+
+%nonassoc T_LOWER_THAN_ELSE
+%nonassoc T_ELSE
+
 %%
 
 programa:
@@ -137,9 +141,10 @@ comandos:
 
 comando:
    T_IDENT { setar_identificador_esquerda(token); } atribuicao
-   | while
    | read
    | write
+   | while
+   | if
 ;
 
 atribuicao:
@@ -166,6 +171,15 @@ while:
    T_WHILE { comecar_while(); }
    expr { avaliar_while(); }
    T_DO comando_composto { finalizar_while(); }
+
+if:
+   T_IF expr { avaliar_if(); }
+   T_THEN comando { finalizar_if(); }
+   else { finalizar_else(); }
+
+else:
+   T_ELSE comando
+   | %prec T_LOWER_THAN_ELSE
 
 expr:
    expr_simples

@@ -106,4 +106,8 @@ void comecar_while();
 void avaliar_while();
 void finalizar_while();
 
+void avaliar_if();
+void finalizar_if();
+void finalizar_else();
+
 #endif

@@ -261,3 +261,36 @@ void finalizar_while() {
 
   geraCodigo(rotuloFim, "NADA");
 }
+
+// === If
+void avaliar_if() {
+  char *rotuloElse = malloc(10);
+  criar_proximo_rotulo(rotuloElse);
+
+  char *rotuloFim = malloc(10);
+  criar_proximo_rotulo(rotuloFim);
+
+  pilha_push_label(pilha_rotulos, rotuloFim);
+  pilha_push_label(pilha_rotulos, rotuloElse);
+
+  char comando[100];
+  sprintf(comando, "DSVF %s", rotuloElse);
+  geraCodigo(NULL, comando);
+}
+
+void finalizar_if() {
+  char *rotuloElse = pilha_pop_label(pilha_rotulos);
+  char *rotuloFim = pilha_peek_label(pilha_rotulos);
+
+  char comando[100];
+  sprintf(comando, "DSVS %s", rotuloFim);
+  geraCodigo(NULL, comando);
+
+  geraCodigo(rotuloElse, "NADA");
+}
+
+void finalizar_else() {
+  char *rotuloFim = pilha_pop_label(pilha_rotulos);
+  geraCodigo(rotuloFim, "NADA");
+}
+
