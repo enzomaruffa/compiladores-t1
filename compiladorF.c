@@ -30,9 +30,19 @@ int alocacoes_pendentes = 0;
 
 pilha_t *tabela_simbolos = NULL;
 
-FILE* fp=NULL;
-void geraCodigo (char* rot, char* comando) {
+simbolo_t *simbolo_esquerda_atual = NULL;
 
+FILE* fp=NULL;
+
+// === PRIVADO ===
+
+int get_posicao_memoria_simbolo(simbolo_t *simbolo) {
+  return simbolo->variavel.deslocamento;
+}
+
+// === PUBLICO ===
+
+void geraCodigo (char* rot, char* comando) {
   if (fp == NULL) {
     fp = fopen ("MEPA", "w");
   }
@@ -88,6 +98,30 @@ void carregar_simbolo(char* token) {
     imprimeErro(erro);
   }
 
-  sprintf(comando, "CRVL %d", simbolo->variavel.deslocamento);
+  sprintf(comando, "CRVL %d", get_posicao_memoria_simbolo(simbolo));
   geraCodigo(NULL, comando);
 };
+
+void setar_identificador_esquerda(char* token) {
+  simbolo_esquerda_atual = pilha_get_by_id(tabela_simbolos, token);
+  if (simbolo_esquerda_atual == NULL) {
+    char erro[100];
+    sprintf(erro, "Variável não declarada: %s", token);
+    imprimeErro(erro);
+  }
+}
+
+void armazenar_valor_identificador_esquerda() {
+  char comando[100];
+
+  if (simbolo_esquerda_atual == NULL) {
+    char erro[100];
+    sprintf(erro, "simbolo_esquerda_atual nulo. Erro interno do compilador.");
+    imprimeErro(erro);
+  }
+
+  sprintf(comando, "ARMZ %d", get_posicao_memoria_simbolo(simbolo_esquerda_atual));
+  geraCodigo(NULL, comando);
+
+  simbolo_esquerda_atual = NULL;
+}

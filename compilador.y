@@ -132,11 +132,11 @@ comandos:
 ;
 
 comando:
-   T_IDENT { } atribuicao
+   T_IDENT { setar_identificador_esquerda(token); } atribuicao
 ;
 
 atribuicao:
-   T_ATRIBUICAO expr
+   T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
 ;
 
 expr:

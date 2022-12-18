@@ -87,4 +87,7 @@ void alocar_vars_pendentes();
 void carregar_constante(char* token);
 void carregar_simbolo(char* token);
 
+void setar_identificador_esquerda(char* token);
+void armazenar_valor_identificador_esquerda();
+
 #endif
