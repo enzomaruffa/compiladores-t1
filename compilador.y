@@ -59,12 +59,16 @@ programa:
       geraCodigo (NULL, "INPP");
    }
    T_PROGRAM T_IDENT
-   T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES T_PONTO_E_VIRGULA
+   parametros_programa T_PONTO_E_VIRGULA
    bloco T_PONTO
    {
       geraCodigo (NULL, "PARA");
    }
 ;
+
+parametros_programa:
+   T_ABRE_PARENTESES lista_idents T_FECHA_PARENTESES
+   |
 
 bloco:
    parte_declara_vars
@@ -76,9 +80,7 @@ parte_declara_vars:
    var
 ;
 
-
 var:
-   { } 
    T_VAR declara_vars
    |
 ;
@@ -133,15 +135,21 @@ comandos:
 
 comando:
    T_IDENT { setar_identificador_esquerda(token); } atribuicao
+   | while
 ;
 
 atribuicao:
    T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
 ;
 
+while:
+   T_WHILE { comecar_while(); }
+   expr { avaliar_while(); }
+   T_DO comando_composto { finalizar_while(); }
+
 expr:
    expr_simples
-   /* | expr_simples relacao expr_simples */
+   | expr_simples relacao expr_simples { gerar_relacao(); }
 ;
 
 expr_simples:
@@ -185,12 +193,12 @@ fator:
 ;
 
 relacao:
-   T_IGUAL { save_relation(simb_igual); }
-   | T_DIF { save_relation(simb_dif); }
-   | T_MENOR { save_relation(simb_menor); }
-   | T_MAIOR { save_relation(simb_maior); }
-   | T_MENOR_IGUAL { save_relation(simb_menor_igual); }
-   | T_MAIOR_IGUAL { save_relation(simb_maior_igual); }
+   T_IGUAL { salvar_relacao(simb_igual); }
+   | T_DIF { salvar_relacao(simb_dif); }
+   | T_MENOR { salvar_relacao(simb_menor); }
+   | T_MAIOR { salvar_relacao(simb_maior); }
+   | T_MENOR_IGUAL { salvar_relacao(simb_menor_igual); }
+   | T_MAIOR_IGUAL { salvar_relacao(simb_maior_igual); }
 ;
 
 

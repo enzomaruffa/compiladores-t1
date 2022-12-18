@@ -26,19 +26,29 @@
 simbolos simbolo, relacao;
 char token[TAM_TOKEN];
 
+FILE* fp=NULL;
+
+// Pilhas
+pilha_t *tabela_simbolos = NULL;
+pilha_t *pilha_rotulos = NULL;
+
+// Global
+int rotulos_criados = 0;
+
+// Frame atual
 int alocacoes_pendentes = 0;
 int nivel_lexico_atual = 0;
 int deslocamento_atual = 0;
 
-pilha_t *tabela_simbolos = NULL;
-
+// Atribuiçao atual
 simbolo_t *simbolo_esquerda_atual = NULL;
-
-FILE* fp=NULL;
 
 // === PRIVADO ===
 
-
+void criar_proximo_rotulo(char *rotulo) {
+  sprintf(rotulo, "R%d", rotulos_criados);
+  rotulos_criados += 1;
+}
 
 // === PUBLICO ===
 
@@ -61,6 +71,7 @@ int imprimeErro ( char* erro ) {
 
 void inicia_vars_compilador() {
   tabela_simbolos = pilha_create();
+  pilha_rotulos = pilha_create();
 }
 
 void registra_var(char* token) {
@@ -73,6 +84,7 @@ void registra_var(char* token) {
   pilha_push(tabela_simbolos, simbolo);
 }
 
+// === Alocação
 void incrementa_aloc_pendentes() {
   alocacoes_pendentes++;
 }
@@ -101,6 +113,7 @@ void desalocar() {
   }
 }
 
+// === Carregamento
 void carregar_constante(char* token) {
   char comando[100];
   sprintf(comando, "CRCT %s", token);
@@ -127,6 +140,24 @@ void carregar_simbolo(char* token) {
   geraCodigo(NULL, comando);
 };
 
+// === Expr
+void salvar_relacao(simbolos relacao_ctx) {
+  relacao = relacao_ctx;
+}
+
+void gerar_relacao() {
+    switch (relacao) {
+        case simb_igual: geraCodigo(NULL, "CMIG"); break;
+        case simb_dif: geraCodigo(NULL, "CMDG"); break;
+        case simb_menor: geraCodigo(NULL, "CMME"); break;
+        case simb_maior: geraCodigo(NULL, "CMMA"); break;
+        case simb_menor_igual: geraCodigo(NULL, "CMEG"); break;
+        case simb_maior_igual: geraCodigo(NULL, "CMAG"); break;
+        default: break;
+    }
+}
+
+// === Atribuição
 void setar_identificador_esquerda(char* token) {
   simbolo_esquerda_atual = pilha_get_by_id(tabela_simbolos, token);
 
@@ -150,4 +181,38 @@ void armazenar_valor_identificador_esquerda() {
   geraCodigo(NULL, comando);
 
   simbolo_esquerda_atual = NULL;
+}
+
+// === While
+void comecar_while() {
+  char *rotuloInicio = malloc(10);
+  criar_proximo_rotulo(rotuloInicio);
+
+  char *rotuloFim = malloc(10);
+  criar_proximo_rotulo(rotuloFim);
+
+  pilha_push_label(pilha_rotulos, rotuloInicio);
+  pilha_push_label(pilha_rotulos, rotuloFim);
+
+  geraCodigo(rotuloInicio, "NADA");
+}
+
+void avaliar_while() {
+  // TODO: Verificar, se não for booleano imprimir erro
+  char *rotuloFim = pilha_peek_label(pilha_rotulos);
+
+  char comando[100];
+  sprintf(comando, "DSVF %s", rotuloFim);
+  geraCodigo(NULL, comando);
+}
+
+void finalizar_while() {
+  char *rotuloFim = pilha_pop_label(pilha_rotulos);
+  char *rotuloInicio = pilha_pop_label(pilha_rotulos);
+
+  char comando[100];
+  sprintf(comando, "DSVS %s", rotuloInicio);
+  geraCodigo(NULL, comando);
+
+  geraCodigo(rotuloFim, "NADA");
 }

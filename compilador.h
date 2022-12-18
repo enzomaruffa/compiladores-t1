@@ -91,4 +91,11 @@ void carregar_simbolo(char* token);
 void setar_identificador_esquerda(char* token);
 void armazenar_valor_identificador_esquerda();
 
+void salvar_relacao(simbolos relacao_ctx);
+void gerar_relacao();
+
+void comecar_while();
+void avaliar_while();
+void finalizar_while();
+
 #endif
