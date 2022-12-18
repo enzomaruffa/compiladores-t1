@@ -53,7 +53,7 @@ void inicia_vars_compilador() {
   tabela_simbolos = pilha_create();
 }
 
-void adiciona_var(char* token) {
+void registra_var(char* token) {
   simbolo_t* simbolo = criar_simbolo(token);
   simbolo->categoria = VARIAVEL_SIMPLES;
   simbolo->nivel_lexico = 0;
@@ -72,3 +72,22 @@ void alocar_vars_pendentes() {
 
   alocacoes_pendentes = 0;
 }
+
+void carregar_constante(char* token) {
+  char comando[100];
+  sprintf(comando, "CRCT %s", token);
+  geraCodigo(NULL, comando);
+}
+
+void carregar_simbolo(char* token) {
+  char comando[100];
+  simbolo_t* simbolo = pilha_get_by_id(tabela_simbolos, token);
+  if (simbolo == NULL) {
+    char erro[100];
+    sprintf(erro, "Variável não declarada: %s", token);
+    imprimeErro(erro);
+  }
+
+  sprintf(comando, "CRVL %d", simbolo->variavel.deslocamento);
+  geraCodigo(NULL, comando);
+};

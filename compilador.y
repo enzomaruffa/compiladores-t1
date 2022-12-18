@@ -105,11 +105,11 @@ tipo:
 
 lista_id_var:
    lista_id_var T_VIRGULA T_IDENT {
-      adiciona_var(token);
+      registra_var(token);
       incrementa_aloc_pendentes();
    }
    | T_IDENT {
-      adiciona_var(token);
+      registra_var(token);
       incrementa_aloc_pendentes();
    }
 ;
@@ -178,8 +178,8 @@ op_fator:
 ;
 
 fator:
-   T_IDENT { /* carrega variavel */ }
-   | T_NUMERO { /* carrega uma constante load_value(token); */ }
+   T_IDENT { carregar_simbolo(token);}
+   | T_NUMERO { carregar_constante(token); }
    | T_ABRE_PARENTESES expr T_FECHA_PARENTESES
    | T_NOT fator
 ;

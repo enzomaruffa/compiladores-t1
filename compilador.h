@@ -76,9 +76,15 @@ extern int nl;
 void geraCodigo(char *, char *);
 int yylex();
 void yyerror(const char *s);
+
 void inicia_vars_compilador();
-void adiciona_var(char* token);
+
+void registra_var(char* token);
+
 void incrementa_aloc_pendentes();
 void alocar_vars_pendentes();
+
+void carregar_constante(char* token);
+void carregar_simbolo(char* token);
 
 #endif
