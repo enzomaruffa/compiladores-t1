@@ -294,6 +294,20 @@ not {
     return T_MAIOR;
  }
 
+read {
+    simbolo = simb_read;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" read  ");
+    return T_READ;
+ }
+
+write {
+    simbolo = simb_write;
+    strncpy (token, yytext, TAM_TOKEN);
+    IMPRIME(" write  ");
+    return T_WRITE;
+ }
+
 {pulo_linha} {nl++;}
 
 {descarte}

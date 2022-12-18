@@ -52,6 +52,8 @@ int num_vars;
 %token T_MAIOR
 %token T_MENOR_IGUAL
 %token T_MAIOR_IGUAL
+%token T_READ
+%token T_WRITE
 %%
 
 programa:
@@ -136,11 +138,29 @@ comandos:
 comando:
    T_IDENT { setar_identificador_esquerda(token); } atribuicao
    | while
+   | read
+   | write
 ;
 
 atribuicao:
    T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
 ;
+
+read:
+   T_READ T_ABRE_PARENTESES lista_read T_FECHA_PARENTESES
+
+lista_read:
+   lista_read T_VIRGULA T_IDENT { ler_simbolo(token); }
+   | T_IDENT { ler_simbolo(token); }
+
+write:
+   T_WRITE T_ABRE_PARENTESES lista_write T_FECHA_PARENTESES
+
+lista_write:
+   lista_write T_VIRGULA T_IDENT { escrever_simbolo(token); }
+   | T_IDENT { escrever_simbolo(token); }
+   | lista_write T_VIRGULA T_NUMERO { escrever_constante(token); }
+   | T_NUMERO { escrever_constante(token); }
 
 while:
    T_WHILE { comecar_while(); }

@@ -56,7 +56,9 @@ typedef enum simbolos
   simb_menor,
   simb_maior,
   simb_menor_igual,
-  simb_maior_igual
+  simb_maior_igual,
+  simb_read,
+  simb_write,
 } simbolos;
 
 /* -------------------------------------------------------------------
@@ -77,6 +79,8 @@ void geraCodigo(char *, char *);
 int yylex();
 void yyerror(const char *s);
 
+int imprimeErro(char* erro);
+
 void inicia_vars_compilador();
 
 void registra_var(char* token);
@@ -87,6 +91,10 @@ void desalocar();
 
 void carregar_constante(char* token);
 void carregar_simbolo(char* token);
+
+void ler_simbolo(char* token);
+void escrever_simbolo(char* token);
+void escrever_constante(char* token);
 
 void setar_identificador_esquerda(char* token);
 void armazenar_valor_identificador_esquerda();

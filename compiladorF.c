@@ -50,6 +50,24 @@ void criar_proximo_rotulo(char *rotulo) {
   rotulos_criados += 1;
 }
 
+void gera_armz(simbolo_t* simbolo) {
+  if (simbolo == NULL) {
+    char erro[100];
+    sprintf(erro, "Variável não declarada: %s", token);
+    imprimeErro(erro);
+  }
+
+  if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == FUNCAO) {
+    char erro[100];
+    sprintf(erro, "Procedimento ou função não pode ser usado para armazenar variável: %s", token);
+    imprimeErro(erro);
+  }
+
+  char comando[100];
+  sprintf(comando, "ARMZ %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  geraCodigo(NULL, comando);
+}
+
 // === PUBLICO ===
 
 void geraCodigo (char* rot, char* comando) {
@@ -140,6 +158,34 @@ void carregar_simbolo(char* token) {
   geraCodigo(NULL, comando);
 };
 
+void ler_simbolo(char* token) {
+  char comando[100];
+  simbolo_t* simbolo = pilha_get_by_id(tabela_simbolos, token);
+
+  sprintf(comando, "LEIT");
+  geraCodigo(NULL, comando);
+
+  gera_armz(simbolo);
+}
+
+void escrever_simbolo(char* token) {
+  char comando[100];
+  
+  carregar_simbolo(token);
+
+  sprintf(comando, "IMPR");
+  geraCodigo(NULL, comando);
+}
+
+void escrever_constante(char* token) {
+  char comando[100];
+  
+  carregar_constante(token);
+
+  sprintf(comando, "IMPR");
+  geraCodigo(NULL, comando);
+}
+
 // === Expr
 void salvar_relacao(simbolos relacao_ctx) {
   relacao = relacao_ctx;
@@ -177,8 +223,7 @@ void armazenar_valor_identificador_esquerda() {
     imprimeErro(erro);
   }
 
-  sprintf(comando, "ARMZ %d,%d", simbolo_esquerda_atual->nivel_lexico, simbolo_esquerda_atual->variavel.deslocamento);
-  geraCodigo(NULL, comando);
+  gera_armz(simbolo_esquerda_atual);
 
   simbolo_esquerda_atual = NULL;
 }
