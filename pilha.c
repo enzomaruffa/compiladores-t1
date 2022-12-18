@@ -22,7 +22,7 @@ void pilha_print(pilha_t *pilha, void print(item_pilha_t*)) {
 }
 
 // MARK: Pilha de simbolos
-void pilha_push(pilha_t *pilha, simbolo_t *simbolo) {
+void pilha_push_simbolo(pilha_t *pilha, simbolo_t *simbolo) {
     item_pilha_t *item = malloc(sizeof(item_pilha_t));
     item->simbolo = simbolo;
     item->prev = pilha->top;
@@ -30,7 +30,7 @@ void pilha_push(pilha_t *pilha, simbolo_t *simbolo) {
     pilha->length++;
 }
 
-simbolo_t* pilha_pop(pilha_t *pilha) {
+simbolo_t* pilha_pop_simbolo(pilha_t *pilha) {
     item_pilha_t *item = pilha->top;
     if (item) {
         pilha->top = item->prev;
@@ -43,7 +43,7 @@ simbolo_t* pilha_pop(pilha_t *pilha) {
     }
 }
 
-simbolo_t* pilha_peek(pilha_t *pilha) {
+simbolo_t* pilha_peek_simbolo(pilha_t *pilha) {
     item_pilha_t *item = pilha->top;
     if (item) {
         return item->simbolo;
@@ -52,7 +52,7 @@ simbolo_t* pilha_peek(pilha_t *pilha) {
     }
 }
 
-simbolo_t* pilha_get_by_id(pilha_t *pilha, char *id) {
+simbolo_t* pilha_get_by_id_simbolo(pilha_t *pilha, char *id) {
     for (item_pilha_t *item = pilha->top; item; item = item->prev) {
         if (!strcmp(item->simbolo->id, id)) {
             return item->simbolo;
@@ -61,11 +61,11 @@ simbolo_t* pilha_get_by_id(pilha_t *pilha, char *id) {
     return NULL;
 }
 
-void simbolo_pilha_print(item_pilha_t *item) {
-    simbolo_print(item->simbolo);
+void pilha_print_simbolo(item_pilha_t *item) {
+    print_simbolo(item->simbolo);
 }
 
-void simbolo_print(simbolo_t* s) {
+void print_simbolo(simbolo_t* s) {
     switch (s->categoria) {
         case VARIAVEL_SIMPLES:
             printf("VS %s: %d %d\n", s->id, s->nivel_lexico, s->variavel.deslocamento);

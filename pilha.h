@@ -24,12 +24,12 @@ pilha_t* pilha_create();
 int pilha_is_empty(pilha_t *pilha);
 void pilha_print(pilha_t *pilha, void print(item_pilha_t*));
 
-void pilha_push(pilha_t *pilha, simbolo_t *simbolo);
-simbolo_t* pilha_pop(pilha_t *pilha);
-simbolo_t* pilha_peek(pilha_t *pilha);
-simbolo_t* pilha_get_by_id(pilha_t *pilha, char *id);
-void simbolo_pilha_print(item_pilha_t *item);
-void simbolo_print(simbolo_t *s);
+void pilha_push_simbolo(pilha_t *pilha, simbolo_t *simbolo);
+simbolo_t* pilha_pop_simbolo(pilha_t *pilha);
+simbolo_t* pilha_peek_simbolo(pilha_t *pilha);
+simbolo_t* pilha_get_by_id_simbolo(pilha_t *pilha, char *id);
+void pilha_print_simbolo(item_pilha_t *item);
+void print_simbolo(simbolo_t *s);
 
 void pilha_push_label(pilha_t *pilha, char *label);
 char* pilha_pop_label(pilha_t *pilha);

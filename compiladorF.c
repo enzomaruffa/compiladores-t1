@@ -88,7 +88,7 @@ void aumentar_nivel_lexico() {
 }
 
 void diminuir_nivel_lexico() {
-  infos_compilador_t *infos_anteriores = pilha_pop_infos(pilha_infos); // TODO: pilha_pop(pilha_infos);
+  infos_compilador_t *infos_anteriores = pilha_pop_infos(pilha_infos);
   free(infos_atuais);
   infos_atuais = infos_anteriores;
 }
@@ -127,7 +127,7 @@ void registra_var(char* token) {
   simbolo->variavel.deslocamento = infos_atuais->deslocamento;
   infos_atuais->deslocamento += 1;
 
-  pilha_push(tabela_simbolos, simbolo);
+  pilha_push_simbolo(tabela_simbolos, simbolo);
 }
 
 // === Alocação
@@ -155,7 +155,7 @@ void desalocar() {
 
   // Remover símbolos
   for (int i = 0; i < infos_atuais->deslocamento; i++) {
-    pilha_pop(tabela_simbolos);
+    pilha_pop_simbolo(tabela_simbolos);
   }
 }
 
@@ -168,7 +168,7 @@ void carregar_constante(char* token) {
 
 void carregar_simbolo(char* token) {
   char comando[100];
-  simbolo_t* simbolo = pilha_get_by_id(tabela_simbolos, token);
+  simbolo_t* simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
 
   if (simbolo == NULL) {
     char erro[100];
@@ -188,7 +188,7 @@ void carregar_simbolo(char* token) {
 
 void ler_simbolo(char* token) {
   char comando[100];
-  simbolo_t* simbolo = pilha_get_by_id(tabela_simbolos, token);
+  simbolo_t* simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
 
   sprintf(comando, "LEIT");
   geraCodigo(NULL, comando);
@@ -233,7 +233,7 @@ void gerar_relacao() {
 
 // === Atribuição
 void setar_identificador_esquerda(char* token) {
-  simbolo_esquerda_atual = pilha_get_by_id(tabela_simbolos, token);
+  simbolo_esquerda_atual = pilha_get_by_id_simbolo(tabela_simbolos, token);
 
   #ifdef DEBUG
   printf("[setar_identificador_esquerda]: %s\n", token);
@@ -345,7 +345,7 @@ void registrar_procedure(char* token) {
   strcpy(procedure->procedimento.rotulo, rotulo);
 
   // Adicionar na tabela de símbolos
-  pilha_push(tabela_simbolos, procedure);
+  pilha_push_simbolo(tabela_simbolos, procedure);
 
   // Gerar código ({rótulo do procedure}, ENPR {nível léxico do procedure})
   char comando[100];
@@ -353,7 +353,7 @@ void registrar_procedure(char* token) {
   geraCodigo(rotulo, comando);
 
   // Coloca na pilha de subrotinas
-  pilha_push(pilha_subrotinas, procedure);
+  pilha_push_simbolo(pilha_subrotinas, procedure);
 }
 
 void comecar_bloco() {
@@ -411,7 +411,7 @@ void chamar_procedure() {
 
 void voltar_procedure() {
   // Desempilhar subrotina
-  simbolo_t *subrotina = pilha_pop(pilha_subrotinas);
+  simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
 
   // Gerar código (RTPR)
   char comando[100];
