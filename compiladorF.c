@@ -48,7 +48,7 @@ simbolo_t *simbolo_esquerda_atual = NULL;
 // === PRIVADO ===
 
 void criar_proximo_rotulo(char *rotulo) {
-  sprintf(rotulo, "R%d", rotulos_criados);
+  sprintf(rotulo, "R%02d", rotulos_criados);
   rotulos_criados += 1;
 }
 
