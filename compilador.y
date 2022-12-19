@@ -136,10 +136,35 @@ parte_declara_subrots:
 
 declara_procedure:
    T_PROCEDURE T_IDENT { registrar_procedure(token); }
-   /* parametros_formais_procedure */
+   parametros_formais_procedure
+   { finaliza_parametros_subrotina(); }
    T_PONTO_E_VIRGULA
    bloco
-   { voltar_procedure(); }
+   { finaliza_procedure(); }
+
+parametros_formais_procedure:
+   T_ABRE_PARENTESES params_formais_rep T_FECHA_PARENTESES
+   |
+
+params_formais_rep:
+    params_formais_rep T_PONTO_E_VIRGULA secao_de_params_formais
+    | secao_de_params_formais
+;
+
+secao_de_params_formais:
+    T_VAR lista_params_ref T_DOIS_PONTOS tipo
+    | lista_params_val T_DOIS_PONTOS tipo
+;
+
+lista_params_ref:
+    lista_params_ref T_VIRGULA T_IDENT { registra_parametro(token, 1); }
+    | T_IDENT { registra_parametro(token, 1); }
+;
+
+lista_params_val:
+    lista_params_val T_VIRGULA T_IDENT { registra_parametro(token, 0); }
+    | T_IDENT { registra_parametro(token, 0); }
+;
 
 comando_composto:
    T_BEGIN comandos T_END
@@ -172,7 +197,15 @@ atribuicao:
    T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
 
 chamada_procedure:
+   T_ABRE_PARENTESES lista_parametros_reais T_FECHA_PARENTESES
    { chamar_procedure(); }
+   | { chamar_procedure(); }
+
+lista_parametros_reais:
+   lista_parametros_reais T_VIRGULA expr
+   | expr
+   |
+
 
 read:
    T_READ T_ABRE_PARENTESES lista_read T_FECHA_PARENTESES

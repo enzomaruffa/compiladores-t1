@@ -42,6 +42,8 @@ int rotulos_criados = 0;
 int alocacoes_pendentes = 0;
 infos_compilador_t* infos_atuais;
 
+simbolo_t *subrotina_atual; // Função ou procedimento sendo declarado
+
 // Atribuiçao atual
 simbolo_t *simbolo_esquerda_atual = NULL;
 
@@ -235,7 +237,7 @@ void gerar_relacao() {
 void setar_identificador_esquerda(char* token) {
   simbolo_esquerda_atual = pilha_get_by_id_simbolo(tabela_simbolos, token);
 
-  #ifdef DEBUG
+  #ifdef DEPURA
   printf("[setar_identificador_esquerda]: %s\n", token);
   #endif
 
@@ -331,6 +333,10 @@ void registrar_procedure(char* token) {
   // TODO: Verificar se já existe?
   // TODO: Verificar se é uma palavra reservada?
 
+  #ifdef DEPURA
+  printf("[registrar_procedure]: %s\n", token);
+  #endif
+
   char *rotulo = malloc(10);
   criar_proximo_rotulo(rotulo);
 
@@ -354,9 +360,16 @@ void registrar_procedure(char* token) {
 
   // Coloca na pilha de subrotinas
   pilha_push_simbolo(pilha_subrotinas, procedure);
+
+  // Fazer para outras subrotinas
+  subrotina_atual = procedure;
 }
 
 void comecar_bloco() {
+  #ifdef DEPURA
+  printf("[comecar_bloco]\n");
+  #endif
+
   // Criar rótulo de começo do bloco atual e colocar na pilha
   char *rotuloBloco = malloc(10);
   criar_proximo_rotulo(rotuloBloco);
@@ -372,6 +385,10 @@ void comecar_bloco() {
 }
 
 void finalizar_bloco() {
+  #ifdef DEPURA
+  printf("[finalizar_bloco]\n");
+  #endif
+
   // Tirar rótulo do bloco atual da pilha
   char *rotuloBloco = pilha_pop_label(pilha_rotulos);
 
@@ -383,13 +400,8 @@ void finalizar_bloco() {
 }
 
 void chamar_procedure() {
-  // Pegar da tabela de simbolos
-  // Ver se é procedure de fato
-  // Realizar a chamada
-  // Gerar código (CHPR {rótulo do procedure} {nivel lexico do procedure})
-
-  #ifdef DEBUG
-  printf("[chamar_procedure] '%s', %d\n", simbolo_esquerda_atual->procedimento.rotulo, nivel_lexico_atual);
+  #ifdef DEPURA
+  printf("[chamar_procedure] '%s', %d\n", simbolo_esquerda_atual->procedimento.rotulo, infos_atuais->nivel_lexico);
   #endif
 
   if (simbolo_esquerda_atual == NULL) {
@@ -409,7 +421,7 @@ void chamar_procedure() {
   geraCodigo(NULL, comando);
 }
 
-void voltar_procedure() {
+void finaliza_procedure() {
   // Desempilhar subrotina
   simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
 
@@ -417,4 +429,52 @@ void voltar_procedure() {
   char comando[100];
   sprintf(comando, "RTPR %d,%d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
   geraCodigo(NULL, comando);
+
+  // Desempillhar parâmetros da tabela de simbolos
+  int qtd_parametros = proc_get_qtd_param(subrotina);
+  #ifdef DEPURA
+  printf("QTD PARAMETROS: %d\n", qtd_parametros);
+  #endif
+
+  for (int i = 0; i < qtd_parametros; i++) {
+    pilha_pop_simbolo(tabela_simbolos);
+  }
+}
+
+// Parâmetros com procedimentos
+void registra_parametro(char* token, int por_referencia) {
+  #ifdef DEPURA
+  printf("[registra_parametro] '%s', %d\n", token, por_referencia);
+  #endif
+
+  simbolo_t *parametro = criar_simbolo(token);
+
+  if (por_referencia) {
+    parametro->categoria = PARAMETRO_FORMAL_REF;
+  } else {
+    parametro->categoria = PARAMETRO_FORMAL_VALUE;
+  }
+
+  parametro->nivel_lexico = infos_atuais->nivel_lexico;
+  parametro->parametro.proximo_parametro = NULL;
+  parametro->parametro.deslocamento = 0;
+
+  proc_adiciona_param(subrotina_atual, parametro);
+  pilha_push_simbolo(tabela_simbolos, parametro);
+}
+
+void finaliza_parametros_subrotina() {
+  #ifdef DEPURA
+  printf("[finaliza_parametros_subrotina]\n");
+  #endif
+
+  int qtd_parametros = proc_get_qtd_param(subrotina_atual);
+  subrotina_atual->procedimento.deslocamento = -4 - qtd_parametros;
+  for (simbolo_t *p = subrotina_atual->procedimento.primeiro_parametro; 
+        p;
+        p = p->parametro.proximo_parametro, qtd_parametros--) {
+      p->parametro.deslocamento = -3 - qtd_parametros;
+  }
+
+  subrotina_atual = NULL;
 }

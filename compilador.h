@@ -115,6 +115,9 @@ void registrar_procedure(char* token);
 void comecar_bloco();
 void finalizar_bloco();
 void chamar_procedure();
-void voltar_procedure();
+void finaliza_procedure();
+
+void registra_parametro(char* token, int por_referencia);
+void finaliza_parametros_subrotina();
 
 #endif

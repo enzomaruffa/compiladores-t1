@@ -19,7 +19,7 @@ compilador.tab.c: compilador.y compilador.h
 	bison compilador.y -d -v
 
 compilador.o : compilador.h compiladorF.c
-	gcc -c compiladorF.c -o compilador.o
+	gcc -c compiladorF.c -o compilador.o -DDEPURA=$(DEPURA)
 
 clean :
 	rm -f compilador.tab.* lex.yy.c compilador.o compilador
