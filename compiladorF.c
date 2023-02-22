@@ -68,7 +68,13 @@ void gera_armz(simbolo_t* simbolo) {
   }
 
   char comando[100];
-  sprintf(comando, "ARMZ %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+
+  if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) {
+    sprintf(comando, "ARMZ %d,%d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
+  } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
+    sprintf(comando, "ARMI %d,%d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
+  }
+
   geraCodigo(NULL, comando);
 }
 
@@ -184,7 +190,12 @@ void carregar_simbolo(char* token) {
     imprimeErro(erro);
   }
 
-  sprintf(comando, "CRVL %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) { 
+    sprintf(comando, "CRVL %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
+    sprintf(comando, "CRVI %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  }
+
   geraCodigo(NULL, comando);
 };
 

@@ -166,6 +166,10 @@ lista_params_val:
     | T_IDENT { registra_parametro(token, 0); }
 ;
 
+comando_ou_composto:
+   comando
+   | comando_composto
+
 comando_composto:
    T_BEGIN comandos T_END
 ;
@@ -230,11 +234,11 @@ while:
 
 if:
    T_IF expr { avaliar_if(); }
-   T_THEN comando { finalizar_if(); }
+   T_THEN comando_ou_composto { finalizar_if(); }
    else { finalizar_else(); }
 
 else:
-   T_ELSE comando
+   T_ELSE comando_ou_composto
    | %prec T_LOWER_THAN_ELSE
 
 expr:
