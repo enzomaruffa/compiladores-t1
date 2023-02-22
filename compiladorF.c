@@ -62,6 +62,10 @@ void criar_proximo_rotulo(char *rotulo) {
 }
 
 void gera_armz(simbolo_t* simbolo) {
+  #ifdef DEPURA
+  printf("[gera_armz]");
+  #endif
+
   if (simbolo == NULL) {
     char erro[200];
     sprintf(erro, "Variável não declarada: %s", token);
@@ -74,9 +78,15 @@ void gera_armz(simbolo_t* simbolo) {
     imprimeErro(erro);
   }
 
+  // #ifdef DEPURA
+  printf("[gera_armz] simbolo->categoria: %d, simbolo->nivel_lexico: %d", simbolo->categoria, simbolo->nivel_lexico);
+  // #endif
+
   char comando[100];
 
-  if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) {
+  if (simbolo->categoria == VARIAVEL_SIMPLES) {
+    sprintf(comando, "ARMZ %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  } else if (simbolo->categoria == PARAMETRO_FORMAL_VALUE) {
     sprintf(comando, "ARMZ %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
   } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
     sprintf(comando, "ARMI %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
@@ -158,6 +168,10 @@ void inicia_vars_compilador() {
 
 // === Criação de simbolos
 void registra_var(char* token) {
+  #ifdef DEPURA
+  printf("[registra_var] %s, %d, %d", token, infos_atuais->nivel_lexico, infos_atuais->deslocamento);
+  #endif
+
   simbolo_t* simbolo = criar_simbolo(token);
   simbolo->categoria = VARIAVEL_SIMPLES;
   simbolo->nivel_lexico = infos_atuais->nivel_lexico;
@@ -222,6 +236,10 @@ void carregar_simbolo(char* token) {
     sprintf(erro, "Procedimento ou função não pode ser usado como expressão: %s", token);
     imprimeErro(erro);
   }
+
+  #ifdef DEPURA
+  printf("[carregar_simbolo]: categoria: %d, nivel lexico: %d, deslocament: %d \n", simbolo->categoria, simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  #endif
 
   // Caso eu esteja em uma chamada de outra subrotina e quero chamar uma nova como parâmetro, preciso aumentar o numero atual de parametros
   infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
@@ -592,7 +610,7 @@ void chamar_subrot() {
   }
 
   char comando[100];
-  sprintf(comando, "CHPR %s %d", subrot->procedimento.rotulo, infos_atuais->nivel_lexico);
+  sprintf(comando, "CHPR %s, %d", subrot->procedimento.rotulo, infos_atuais->nivel_lexico);
   geraCodigo(NULL, comando);
 
   chamando_funcao = 0;
