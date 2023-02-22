@@ -9,7 +9,7 @@
 
 $DEPURA=1
 
-compilador: pilha.h simbolo.h lex.yy.c compilador.tab.c compilador.o compilador.h
+compilador: pilha.h simbolo.h infos_compilador.h infos_chamada_subrot.h lex.yy.c compilador.tab.c compilador.o compilador.h
 	gcc pilha.c simbolo.c lex.yy.c compilador.tab.c compilador.o -o compilador -ll -ly -lc -g
 
 lex.yy.c: compilador.l compilador.h

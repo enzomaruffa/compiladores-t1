@@ -178,3 +178,35 @@ infos_compilador_t* pilha_peek_infos(pilha_t *pilha) {
 //         return -1;
 //     }
 // }
+
+
+// Pilha de chamada de subrot
+void pilha_push_chamada_subrot(pilha_t *pilha, infos_chamada_subrot_t *infos_chamada_subrot) { 
+    item_pilha_t *item = malloc(sizeof(item_pilha_t));
+    item->infos_chamada_subrot = infos_chamada_subrot;
+    item->prev = pilha->top;
+    pilha->top = item;
+    pilha->length++;
+}
+
+infos_chamada_subrot_t *pilha_pop_chamada_subrot(pilha_t *pilha) { 
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        pilha->top = item->prev;
+        pilha->length--;
+        infos_chamada_subrot_t *infos_chamada_subrot = item->infos_chamada_subrot;
+        free(item);
+        return infos_chamada_subrot;
+    } else {
+        return NULL;
+    }
+}
+
+infos_chamada_subrot_t *pilha_peek_chamada_subrot(pilha_t *pilha) { 
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        return item->infos_chamada_subrot;
+    } else {
+        return NULL;
+    }
+}

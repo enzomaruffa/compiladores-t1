@@ -18,6 +18,7 @@
 #include "compilador.h"
 #include "simbolo.h"
 #include "infos_compilador.h"
+#include "infos_chamada_subrot.h"
 #include "pilha.h"
 
 /* -------------------------------------------------------------------
@@ -34,6 +35,7 @@ pilha_t *tabela_simbolos = NULL;
 pilha_t *pilha_rotulos = NULL;
 pilha_t *pilha_subrotinas = NULL;
 pilha_t *pilha_infos = NULL;
+pilha_t *pilha_chamada_subrot = NULL;
 
 // Global
 int rotulos_criados = 0;
@@ -61,13 +63,13 @@ void criar_proximo_rotulo(char *rotulo) {
 
 void gera_armz(simbolo_t* simbolo) {
   if (simbolo == NULL) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Variável não declarada: %s", token);
     imprimeErro(erro);
   }
 
   if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == FUNCAO) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Procedimento ou função não pode ser usado para armazenar variável: %s", token);
     imprimeErro(erro);
   }
@@ -75,9 +77,9 @@ void gera_armz(simbolo_t* simbolo) {
   char comando[100];
 
   if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) {
-    sprintf(comando, "ARMZ %d,%d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
+    sprintf(comando, "ARMZ %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
   } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
-    sprintf(comando, "ARMI %d,%d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
+    sprintf(comando, "ARMI %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
   }
 
   geraCodigo(NULL, comando);
@@ -106,8 +108,27 @@ void diminuir_nivel_lexico() {
   infos_atuais = infos_anteriores;
 }
 
-// === PUBLICO ===
+// Gerenciar infos de subrot
+void empilhar_infos_chamada_subrot(simbolo_t *subrot) {
+  infos_chamada_subrot_t *infos = malloc(sizeof(infos_chamada_subrot_t));
+  infos->simbolo = subrot;
+  infos->parametro_atual = 0;
+  pilha_push_chamada_subrot(pilha_chamada_subrot, infos);
+}
 
+void desempilhar_infos_chamada__subrot() {
+  infos_chamada_subrot_t *infos = pilha_pop_chamada_subrot(pilha_chamada_subrot);
+  free(infos);
+}
+
+simbolo_t *get_chamada_subrot_atual() { 
+  if (chamando_funcao) { 
+    return pilha_get_by_id_simbolo(tabela_simbolos, simbolo_salvo);
+  }
+  return simbolo_esquerda_atual;
+}
+
+// === PUBLICO ===
 void geraCodigo (char* rot, char* comando) {
   if (fp == NULL) {
     fp = fopen ("MEPA", "w");
@@ -131,6 +152,7 @@ void inicia_vars_compilador() {
   pilha_rotulos = pilha_create();
   pilha_subrotinas = pilha_create();
   pilha_infos = pilha_create();
+  pilha_chamada_subrot = pilha_create();
   infos_atuais = criar_infos_compilador();
 }
 
@@ -185,22 +207,65 @@ void carregar_simbolo(char* token) {
   char comando[100];
   simbolo_t* simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
 
+  #ifdef DEPURA
+  printf("[carregar_simbolo]: %s\n", token);
+  #endif
+
   if (simbolo == NULL) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Variável não declarada: %s", token);
     imprimeErro(erro);
   }
 
   if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == FUNCAO) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Procedimento ou função não pode ser usado como expressão: %s", token);
     imprimeErro(erro);
   }
 
-  if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) { 
-    sprintf(comando, "CRVL %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
-  } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
-    sprintf(comando, "CRVI %d,%d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+  // Caso eu esteja em uma chamada de outra subrotina e quero chamar uma nova como parâmetro, preciso aumentar o numero atual de parametros
+  infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
+  #ifdef DEPURA
+  printf("[carregar_simbolo]: chamada_atual: %p\n", chamada_atual);
+  #endif
+
+  if (chamada_atual != NULL) {
+    if (simbolo->categoria == PROCEDIMENTO) {
+      char erro[200];
+      sprintf(erro, "Procedimento não pode ser usado como expressão: %s", token);
+      imprimeErro(erro);
+    }
+
+    if (chamada_atual->parametro_atual > proc_get_qtd_param(chamada_atual->simbolo)) {
+      char erro[200];
+      sprintf(erro, "Número de parâmetros excedido: %s", token);
+      imprimeErro(erro);
+    }
+
+    simbolo_t *parametro = proc_get_param_at(chamada_atual->simbolo, chamada_atual->parametro_atual);
+  
+    if (simbolo->categoria == VARIAVEL_SIMPLES && parametro->categoria == PARAMETRO_FORMAL_VALUE) { 
+      sprintf(comando, "CRVL %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    } else if (simbolo->categoria == VARIAVEL_SIMPLES && parametro->categoria == PARAMETRO_FORMAL_REF) {
+      sprintf(comando, "CREN %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_VALUE && parametro->categoria == PARAMETRO_FORMAL_VALUE) {
+      sprintf(comando, "CRVL %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_VALUE && parametro->categoria == PARAMETRO_FORMAL_REF) {
+      sprintf(comando, "CREN %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_REF && parametro->categoria == PARAMETRO_FORMAL_VALUE) {
+      sprintf(comando, "CRVI %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_REF && parametro->categoria == PARAMETRO_FORMAL_REF) {
+      sprintf(comando, "CRVL %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    }
+
+  } else { 
+    if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == VARIAVEL_SIMPLES) { 
+      sprintf(comando, "CRVL %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
+      sprintf(comando, "CRVI %d, %d", simbolo->nivel_lexico, simbolo->variavel.deslocamento);
+    }
   }
 
   geraCodigo(NULL, comando);
@@ -244,7 +309,7 @@ void setar_identificador_esquerda(char* token) {
   #endif
 
   if (simbolo_esquerda_atual == NULL) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Símbolo não declarado: %s [setar_identificador_esquerda]", token);
     imprimeErro(erro);
   }
@@ -254,7 +319,7 @@ void armazenar_valor_identificador_esquerda() {
   char comando[100];
 
   if (simbolo_esquerda_atual == NULL) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "simbolo_esquerda_atual nulo. Erro interno do compilador. [armazenar_valor_identificador_esquerda]");
     imprimeErro(erro);
   }
@@ -439,9 +504,31 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
   subrotina_atual = subrot;
 }
 
+void inicia_chamada_subrot() { 
+  simbolo_t *subrot;
+
+  subrot = get_chamada_subrot_atual();
+
+  if (subrot == NULL) {
+    char erro[200];
+    sprintf(erro, "Subrotina não declarada. [inicia_chamada_subrot]");
+    imprimeErro(erro);
+  }
+
+  empilhar_infos_chamada_subrot(subrot);
+}
+
 void inicia_chamada_funcao() {
   geraCodigo(NULL, "AMEM 1");
   chamando_funcao = 1;
+
+  // Caso eu esteja em uma chamada de outra subrotina e quero chamar uma nova como parâmetro, preciso aumentar o numero atual de parametros
+  infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
+  if (chamada_atual != NULL) {
+    proximo_parametro_chamada_subrot();
+  }
+
+  inicia_chamada_subrot();
 }
 
 void registra_parametro(char* token, int por_referencia) {
@@ -484,32 +571,28 @@ void finaliza_parametros_subrotina() {
 void chamar_subrot() {
   simbolo_t *subrot;
 
-  if (chamando_funcao) { 
-    subrot = pilha_get_by_id_simbolo(tabela_simbolos, simbolo_salvo);
-  } else {
-    subrot = simbolo_esquerda_atual;
-  }
+  subrot = get_chamada_subrot_atual();
 
-  #ifdef DEPURA
-  printf("[chamar_subrot] '%s'\n", simbolo_salvo);
-  #endif
+  infos_chamada_subrot_t *chamada = pilha_pop_chamada_subrot(pilha_chamada_subrot);
+
+  // TODO: Verificar se o número de parâmetros está correto, comparando com o topo da pilha de chamada de subrotinas
+
 
   if (subrot == NULL) {
-    char erro[100];
+    char erro[200];
     sprintf(erro, "Subrotina não declarada. [chamar_subrot]");
     imprimeErro(erro);
   }
 
-
   if (subrot->categoria != PROCEDIMENTO && subrot->categoria != FUNCAO) {
   print_simbolo(subrot);
-    char erro[100];
+    char erro[200];
     sprintf(erro, "'%s' não é uma subrotina. [chamar_subrot]", subrot->id);
     imprimeErro(erro);
   }
 
   char comando[100];
-  sprintf(comando, "CHPR %s %d", subrot->procedimento.rotulo, subrot->nivel_lexico);
+  sprintf(comando, "CHPR %s %d", subrot->procedimento.rotulo, infos_atuais->nivel_lexico);
   geraCodigo(NULL, comando);
 
   chamando_funcao = 0;
@@ -521,7 +604,7 @@ void finaliza_subrot() {
 
   // Gerar código (RTPR)
   char comando[100];
-  sprintf(comando, "RTPR %d,%d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
+  sprintf(comando, "RTPR %d, %d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
   geraCodigo(NULL, comando);
 
   // Desempillhar parâmetros da tabela de simbolos
@@ -532,5 +615,37 @@ void finaliza_subrot() {
 
   for (int i = 0; i < qtd_parametros; i++) {
     pilha_pop_simbolo(tabela_simbolos);
+  }
+}
+
+void verifica_se_pode_chamar_funcao() { 
+  // Caso eu esteja em uma chamada de outra subrotina e quero chamar uma nova como parâmetro, preciso garantir que o parâmetro formal não é por referência
+  infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
+
+  if (chamada_atual != NULL) {
+    int num_parametro_atual = chamada_atual->parametro_atual;
+
+    simbolo_t *subrot = get_chamada_subrot_atual();
+    simbolo_t *param = proc_get_param_at(subrot, num_parametro_atual);
+
+    if (param == NULL) {
+      char erro[200];
+      sprintf(erro, "Número de parâmetros inválido. [verifica_se_pode_chamar_funcao]");
+      imprimeErro(erro);
+    }
+
+    if (param->categoria == PARAMETRO_FORMAL_REF) {
+      char erro[200];
+      sprintf(erro, "Não é possível passar uma função como parâmetro por referência. [verifica_se_pode_chamar_funcao]");
+      imprimeErro(erro);
+    }
+  }
+}
+
+void proximo_parametro_chamada_subrot() {
+  infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
+
+  if (chamada_atual != NULL) {
+    chamada_atual->parametro_atual++;
   }
 }

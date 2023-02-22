@@ -211,13 +211,13 @@ atribuicao:
    T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
 
 chamada_procedure:
-   T_ABRE_PARENTESES lista_parametros_reais T_FECHA_PARENTESES
+   T_ABRE_PARENTESES { inicia_chamada_subrot(); } lista_parametros_reais T_FECHA_PARENTESES
    { chamar_subrot(); }
    | { chamar_subrot(); }
 
 lista_parametros_reais:
-   lista_parametros_reais T_VIRGULA expr
-   | expr
+   lista_parametros_reais T_VIRGULA expr { proximo_parametro_chamada_subrot(); }
+   | expr { proximo_parametro_chamada_subrot(); }
    |
 
 
@@ -306,7 +306,7 @@ relacao:
 ;
 
 var_ou_chama_funcao:
-   T_ABRE_PARENTESES { inicia_chamada_funcao(); } lista_parametros_reais T_FECHA_PARENTESES
+   T_ABRE_PARENTESES { verifica_se_pode_chamar_funcao(); inicia_chamada_funcao(); } lista_parametros_reais T_FECHA_PARENTESES
    { chamar_subrot(); }
    | { carregar_simbolo_salvo(); }
 

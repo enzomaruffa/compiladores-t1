@@ -127,10 +127,13 @@ void carregar_simbolo_salvo();
 
 void registrar_subrot(char* token, categoria_simbolo categoria);
 void inicia_chamada_funcao();
+void inicia_chamada_subrot();
 void registra_parametro(char* token, int por_referencia);
 void finaliza_parametros_subrotina();
 void chamar_subrot();
 void finaliza_subrot();
 
+void verifica_se_pode_chamar_funcao();
+void proximo_parametro_chamada_subrot();
 
 #endif
