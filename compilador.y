@@ -132,20 +132,21 @@ lista_id_var:
 ;
 
 parte_declara_subrots:
-   parte_declara_subrots declara_procedure T_PONTO_E_VIRGULA
+   parte_declara_subrots declara_procedure T_PONTO_E_VIRGULA 
    | parte_declara_subrots declara_funcao T_PONTO_E_VIRGULA
    |
 
 declara_funcao:
-   T_FUNCTION T_IDENT { registrar_subrot(token, FUNCAO); }
+   T_FUNCTION { inicia_registro_subrot(); } T_IDENT { registrar_subrot(token, FUNCAO); }
    parametros_formais_subrot
    { finaliza_parametros_subrotina(); }
    T_DOIS_PONTOS tipo 
-   T_PONTO_E_VIRGULA bloco
+   T_PONTO_E_VIRGULA 
+   bloco
    { finaliza_subrot(); }
 
 declara_procedure:
-   T_PROCEDURE T_IDENT { registrar_subrot(token, PROCEDIMENTO); }
+   T_PROCEDURE { inicia_registro_subrot(); } T_IDENT { registrar_subrot(token, PROCEDIMENTO); }
    parametros_formais_subrot
    { finaliza_parametros_subrotina(); }
    T_PONTO_E_VIRGULA

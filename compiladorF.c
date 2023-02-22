@@ -79,7 +79,7 @@ void gera_armz(simbolo_t* simbolo) {
   }
 
   // #ifdef DEPURA
-  printf("[gera_armz] simbolo->categoria: %d, simbolo->nivel_lexico: %d", simbolo->categoria, simbolo->nivel_lexico);
+  printf("[gera_armz] simbolo->categoria: %d, simbolo->nivel_lexico: %d\n", simbolo->categoria, simbolo->nivel_lexico);
   // #endif
 
   char comando[100];
@@ -103,6 +103,10 @@ infos_compilador_t * criar_infos_compilador() {
 }
 
 void aumentar_nivel_lexico() {
+  #ifdef DEPURA
+  printf("[aumentar_nivel_lexico] infos_atuais->nivel_lexico: %d, infos_atuais->deslocamento: %d\n", infos_atuais->nivel_lexico, infos_atuais->deslocamento);
+  #endif
+
   pilha_push_infos(pilha_infos, infos_atuais);
 
   infos_compilador_t *novas_infos = criar_infos_compilador();
@@ -113,7 +117,16 @@ void aumentar_nivel_lexico() {
 }
 
 void diminuir_nivel_lexico() {
+  #ifdef DEPURA
+  printf("[diminuir_nivel_lexico] infos_atuais->nivel_lexico: %d, infos_atuais->deslocamento: %d\n", infos_atuais->nivel_lexico, infos_atuais->deslocamento);
+  #endif
+
   infos_compilador_t *infos_anteriores = pilha_pop_infos(pilha_infos);
+
+  #ifdef DEPURA
+  printf("[diminuir_nivel_lexico] infos_anteriores->nivel_lexico: %d, infos_anteriores->deslocamento: %d\n", infos_anteriores->nivel_lexico, infos_anteriores->deslocamento);
+  #endif
+
   free(infos_atuais);
   infos_atuais = infos_anteriores;
 }
@@ -445,9 +458,6 @@ void comecar_bloco() {
   char comando[100];
   sprintf(comando, "DSVS %s", rotuloBloco);
   geraCodigo(NULL, comando);
-
-  // Incrementa o nivel léxico
-  aumentar_nivel_lexico();
 }
 
 void finalizar_bloco() {
@@ -460,9 +470,6 @@ void finalizar_bloco() {
 
   // Gerar código ({rótulo do bloco atual}, NADA)
   geraCodigo(rotuloBloco, "NADA");
-
-  // Decrementa o nivel léxico
-  diminuir_nivel_lexico();
 }
 
 // === Subrotinas
@@ -476,6 +483,11 @@ void salvar_simbolo_identificador(char *token) {
 
 void carregar_simbolo_salvo() {
   carregar_simbolo(simbolo_salvo);
+}
+
+void inicia_registro_subrot() {
+  // Incrementa o nivel léxico
+  aumentar_nivel_lexico();
 }
 
 void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
@@ -634,6 +646,9 @@ void finaliza_subrot() {
   for (int i = 0; i < qtd_parametros; i++) {
     pilha_pop_simbolo(tabela_simbolos);
   }
+
+  // Decrementa o nivel léxico
+  diminuir_nivel_lexico();
 }
 
 void verifica_se_pode_chamar_funcao() { 

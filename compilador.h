@@ -125,6 +125,7 @@ void finalizar_bloco();
 void salvar_simbolo_identificador(char* token);
 void carregar_simbolo_salvo();
 
+void inicia_registro_subrot();
 void registrar_subrot(char* token, categoria_simbolo categoria);
 void inicia_chamada_funcao();
 void inicia_chamada_subrot();
