@@ -1,4 +1,6 @@
-- Support typing in conditions
-- Support type validation
-- Test nested IFs
-- Optimize blocks with no procedures defined (no need to DSVS to the next line)
+- Verificar tipagem de condições
+- Verificar tipagem de parâmetros
+- Verificar tipagem de retorno de função
+- Verificar tipagem de atribuição
+- Testar ifs encadeados
+- Otimizar blocos sem subrots definidas

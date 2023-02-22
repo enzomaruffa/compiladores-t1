@@ -7,13 +7,6 @@
 #include <string.h>
 #include "compilador.h"
 
-typedef enum {
-    VARIAVEL_SIMPLES,
-    PARAMETRO_FORMAL_VALUE,
-    PARAMETRO_FORMAL_REF,
-    PROCEDIMENTO,
-    FUNCAO,
-} categoria_simbolo;
 
 typedef struct simbolo {
     char id[TAM_TOKEN];
@@ -32,6 +25,7 @@ typedef struct simbolo {
 
         struct {
             int deslocamento;
+            char tipo_retorno[20];
             char rotulo[4];
             struct simbolo *primeiro_parametro;
         } procedimento;

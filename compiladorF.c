@@ -47,8 +47,13 @@ simbolo_t *subrotina_atual; // Função ou procedimento sendo declarado
 // Atribuiçao atual
 simbolo_t *simbolo_esquerda_atual = NULL;
 
-// === PRIVADO ===
+// Guarda qual função está sendo chamada, ou o identificador em caso de atribuição
+char simbolo_salvo[100];
 
+// Caso esteja chamando uma função
+int chamando_funcao = 0;
+
+// === PRIVADO ===
 void criar_proximo_rotulo(char *rotulo) {
   sprintf(rotulo, "R%02d", rotulos_criados);
   rotulos_criados += 1;
@@ -120,6 +125,7 @@ int imprimeErro ( char* erro ) {
   exit(-1);
 }
 
+// === Inicialização
 void inicia_vars_compilador() {
   tabela_simbolos = pilha_create();
   pilha_rotulos = pilha_create();
@@ -128,6 +134,7 @@ void inicia_vars_compilador() {
   infos_atuais = criar_infos_compilador();
 }
 
+// === Criação de simbolos
 void registra_var(char* token) {
   simbolo_t* simbolo = criar_simbolo(token);
   simbolo->categoria = VARIAVEL_SIMPLES;
@@ -199,6 +206,7 @@ void carregar_simbolo(char* token) {
   geraCodigo(NULL, comando);
 };
 
+// === Leitura e escrita de símbolos
 void ler_simbolo(char* token) {
   char comando[100];
   simbolo_t* simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
@@ -225,23 +233,6 @@ void escrever_constante(char* token) {
 
   sprintf(comando, "IMPR");
   geraCodigo(NULL, comando);
-}
-
-// === Expr
-void salvar_relacao(simbolos relacao_ctx) {
-  relacao = relacao_ctx;
-}
-
-void gerar_relacao() {
-    switch (relacao) {
-        case simb_igual: geraCodigo(NULL, "CMIG"); break;
-        case simb_dif: geraCodigo(NULL, "CMDG"); break;
-        case simb_menor: geraCodigo(NULL, "CMME"); break;
-        case simb_maior: geraCodigo(NULL, "CMMA"); break;
-        case simb_menor_igual: geraCodigo(NULL, "CMEG"); break;
-        case simb_maior_igual: geraCodigo(NULL, "CMAG"); break;
-        default: break;
-    }
 }
 
 // === Atribuição
@@ -271,6 +262,23 @@ void armazenar_valor_identificador_esquerda() {
   gera_armz(simbolo_esquerda_atual);
 
   simbolo_esquerda_atual = NULL;
+}
+
+// === Expr
+void salvar_relacao(simbolos relacao_ctx) {
+  relacao = relacao_ctx;
+}
+
+void gerar_relacao() {
+    switch (relacao) {
+        case simb_igual: geraCodigo(NULL, "CMIG"); break;
+        case simb_dif: geraCodigo(NULL, "CMDG"); break;
+        case simb_menor: geraCodigo(NULL, "CMME"); break;
+        case simb_maior: geraCodigo(NULL, "CMMA"); break;
+        case simb_menor_igual: geraCodigo(NULL, "CMEG"); break;
+        case simb_maior_igual: geraCodigo(NULL, "CMAG"); break;
+        default: break;
+    }
 }
 
 // === While
@@ -339,43 +347,7 @@ void finalizar_else() {
   geraCodigo(rotuloFim, "NADA");
 }
 
-// == Procedures
-void registrar_procedure(char* token) {
-  // TODO: Verificar se já existe?
-  // TODO: Verificar se é uma palavra reservada?
-
-  #ifdef DEPURA
-  printf("[registrar_procedure]: %s\n", token);
-  #endif
-
-  char *rotulo = malloc(10);
-  criar_proximo_rotulo(rotulo);
-
-  // Criar simbolo
-  simbolo_t *procedure = criar_simbolo(token);
-  procedure->categoria = PROCEDIMENTO;
-  procedure->nivel_lexico = infos_atuais->nivel_lexico;
-
-  procedure->procedimento.deslocamento = 0;
-  procedure->procedimento.primeiro_parametro = NULL;
-
-  strcpy(procedure->procedimento.rotulo, rotulo);
-
-  // Adicionar na tabela de símbolos
-  pilha_push_simbolo(tabela_simbolos, procedure);
-
-  // Gerar código ({rótulo do procedure}, ENPR {nível léxico do procedure})
-  char comando[100];
-  sprintf(comando, "ENPR %d", infos_atuais->nivel_lexico);
-  geraCodigo(rotulo, comando);
-
-  // Coloca na pilha de subrotinas
-  pilha_push_simbolo(pilha_subrotinas, procedure);
-
-  // Fazer para outras subrotinas
-  subrotina_atual = procedure;
-}
-
+// == Blocos
 void comecar_bloco() {
   #ifdef DEPURA
   printf("[comecar_bloco]\n");
@@ -410,49 +382,68 @@ void finalizar_bloco() {
   diminuir_nivel_lexico();
 }
 
-void chamar_procedure() {
+// === Subrotinas
+void salvar_simbolo_identificador(char *token) {
   #ifdef DEPURA
-  printf("[chamar_procedure] '%s', %d\n", simbolo_esquerda_atual->procedimento.rotulo, infos_atuais->nivel_lexico);
+  printf("[salvar_simbolo_identificador] '%s'\n", token);
   #endif
 
-  if (simbolo_esquerda_atual == NULL) {
-    char erro[100];
-    sprintf(erro, "Procedure não declarada. [chamar_procedure]");
-    imprimeErro(erro);
-  }
-
-  if (simbolo_esquerda_atual->categoria != PROCEDIMENTO) {
-    char erro[100];
-    sprintf(erro, "'%s' não é um procedure. [chamar_procedure]", token);
-    imprimeErro(erro);
-  }
-
-  char comando[100];
-  sprintf(comando, "CHPR %s %d", simbolo_esquerda_atual->procedimento.rotulo, simbolo_esquerda_atual->nivel_lexico);
-  geraCodigo(NULL, comando);
+  strcpy(simbolo_salvo, token);
 }
 
-void finaliza_procedure() {
-  // Desempilhar subrotina
-  simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
+void carregar_simbolo_salvo() {
+  carregar_simbolo(simbolo_salvo);
+}
 
-  // Gerar código (RTPR)
-  char comando[100];
-  sprintf(comando, "RTPR %d,%d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
-  geraCodigo(NULL, comando);
+void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
+  // TODO: Verificar se já existe?
+  // TODO: Verificar se é uma palavra reservada?
 
-  // Desempillhar parâmetros da tabela de simbolos
-  int qtd_parametros = proc_get_qtd_param(subrotina);
   #ifdef DEPURA
-  printf("QTD PARAMETROS: %d\n", qtd_parametros);
+  printf("[registrar_subrot]: %s\n", token);
   #endif
 
-  for (int i = 0; i < qtd_parametros; i++) {
-    pilha_pop_simbolo(tabela_simbolos);
+  char *rotulo = malloc(10);
+  criar_proximo_rotulo(rotulo);
+
+  // Criar simbolo
+  simbolo_t *subrot = criar_simbolo(token);
+
+  if (tipo_subrot == FUNCAO) {
+    subrot->categoria = FUNCAO;
+  } else {
+    subrot->categoria = PROCEDIMENTO;
   }
+
+  subrot->nivel_lexico = infos_atuais->nivel_lexico;
+
+  subrot->procedimento.deslocamento = 0;
+  subrot->procedimento.primeiro_parametro = NULL;
+
+  strcpy(subrot->procedimento.rotulo, rotulo);
+
+  // TODO: Adicionar tipo de retorno na subrotina
+
+  // Adicionar na tabela de símbolos
+  pilha_push_simbolo(tabela_simbolos, subrot);
+
+  // Gerar código ({rótulo do subrot}, ENPR {nível léxico do subrot})
+  char comando[100];
+  sprintf(comando, "ENPR %d", infos_atuais->nivel_lexico);
+  geraCodigo(rotulo, comando);
+
+  // Coloca na pilha de subrotinas
+  pilha_push_simbolo(pilha_subrotinas, subrot);
+
+  // Fazer para outras subrotinas
+  subrotina_atual = subrot;
 }
 
-// Parâmetros com procedimentos
+void inicia_chamada_funcao() {
+  geraCodigo(NULL, "AMEM 1");
+  chamando_funcao = 1;
+}
+
 void registra_parametro(char* token, int por_referencia) {
   #ifdef DEPURA
   printf("[registra_parametro] '%s', %d\n", token, por_referencia);
@@ -488,4 +479,58 @@ void finaliza_parametros_subrotina() {
   }
 
   subrotina_atual = NULL;
+}
+
+void chamar_subrot() {
+  simbolo_t *subrot;
+
+  if (chamando_funcao) { 
+    subrot = pilha_get_by_id_simbolo(tabela_simbolos, simbolo_salvo);
+  } else {
+    subrot = simbolo_esquerda_atual;
+  }
+
+  #ifdef DEPURA
+  printf("[chamar_subrot] '%s'\n", simbolo_salvo);
+  #endif
+
+  if (subrot == NULL) {
+    char erro[100];
+    sprintf(erro, "Subrotina não declarada. [chamar_subrot]");
+    imprimeErro(erro);
+  }
+
+
+  if (subrot->categoria != PROCEDIMENTO && subrot->categoria != FUNCAO) {
+  print_simbolo(subrot);
+    char erro[100];
+    sprintf(erro, "'%s' não é uma subrotina. [chamar_subrot]", subrot->id);
+    imprimeErro(erro);
+  }
+
+  char comando[100];
+  sprintf(comando, "CHPR %s %d", subrot->procedimento.rotulo, subrot->nivel_lexico);
+  geraCodigo(NULL, comando);
+
+  chamando_funcao = 0;
+}
+
+void finaliza_subrot() {
+  // Desempilhar subrotina
+  simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
+
+  // Gerar código (RTPR)
+  char comando[100];
+  sprintf(comando, "RTPR %d,%d", subrotina->nivel_lexico, proc_get_qtd_param(subrotina));
+  geraCodigo(NULL, comando);
+
+  // Desempillhar parâmetros da tabela de simbolos
+  int qtd_parametros = proc_get_qtd_param(subrotina);
+  #ifdef DEPURA
+  printf("QTD PARAMETROS: %d\n", qtd_parametros);
+  #endif
+
+  for (int i = 0; i < qtd_parametros; i++) {
+    pilha_pop_simbolo(tabela_simbolos);
+  }
 }

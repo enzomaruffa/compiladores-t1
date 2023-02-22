@@ -61,6 +61,14 @@ typedef enum simbolos
   simb_write,
 } simbolos;
 
+typedef enum {
+    VARIAVEL_SIMPLES,
+    PARAMETRO_FORMAL_VALUE,
+    PARAMETRO_FORMAL_REF,
+    PROCEDIMENTO,
+    FUNCAO,
+} categoria_simbolo;
+
 /* -------------------------------------------------------------------
  * variáveis globais
  * ------------------------------------------------------------------- */
@@ -111,13 +119,18 @@ void avaliar_if();
 void finalizar_if();
 void finalizar_else();
 
-void registrar_procedure(char* token);
 void comecar_bloco();
 void finalizar_bloco();
-void chamar_procedure();
-void finaliza_procedure();
 
+void salvar_simbolo_identificador(char* token);
+void carregar_simbolo_salvo();
+
+void registrar_subrot(char* token, categoria_simbolo categoria);
+void inicia_chamada_funcao();
 void registra_parametro(char* token, int por_referencia);
 void finaliza_parametros_subrotina();
+void chamar_subrot();
+void finaliza_subrot();
+
 
 #endif

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
+#include "simbolo.h"
 
 int num_vars;
 
@@ -132,17 +133,26 @@ lista_id_var:
 
 parte_declara_subrots:
    parte_declara_subrots declara_procedure T_PONTO_E_VIRGULA
+   | parte_declara_subrots declara_funcao T_PONTO_E_VIRGULA
    |
 
+declara_funcao:
+   T_FUNCTION T_IDENT { registrar_subrot(token, FUNCAO); }
+   parametros_formais_subrot
+   { finaliza_parametros_subrotina(); }
+   T_DOIS_PONTOS tipo 
+   T_PONTO_E_VIRGULA bloco
+   { finaliza_subrot(); }
+
 declara_procedure:
-   T_PROCEDURE T_IDENT { registrar_procedure(token); }
-   parametros_formais_procedure
+   T_PROCEDURE T_IDENT { registrar_subrot(token, PROCEDIMENTO); }
+   parametros_formais_subrot
    { finaliza_parametros_subrotina(); }
    T_PONTO_E_VIRGULA
    bloco
-   { finaliza_procedure(); }
+   { finaliza_subrot(); }
 
-parametros_formais_procedure:
+parametros_formais_subrot:
    T_ABRE_PARENTESES params_formais_rep T_FECHA_PARENTESES
    |
 
@@ -202,8 +212,8 @@ atribuicao:
 
 chamada_procedure:
    T_ABRE_PARENTESES lista_parametros_reais T_FECHA_PARENTESES
-   { chamar_procedure(); }
-   | { chamar_procedure(); }
+   { chamar_subrot(); }
+   | { chamar_subrot(); }
 
 lista_parametros_reais:
    lista_parametros_reais T_VIRGULA expr
@@ -280,7 +290,7 @@ op_fator:
 ;
 
 fator:
-   T_IDENT { carregar_simbolo(token);}
+   T_IDENT { salvar_simbolo_identificador(token);} var_ou_chama_funcao
    | T_NUMERO { carregar_constante(token); }
    | T_ABRE_PARENTESES expr T_FECHA_PARENTESES
    | T_NOT fator
@@ -294,6 +304,11 @@ relacao:
    | T_MENOR_IGUAL { salvar_relacao(simb_menor_igual); }
    | T_MAIOR_IGUAL { salvar_relacao(simb_maior_igual); }
 ;
+
+var_ou_chama_funcao:
+   T_ABRE_PARENTESES { inicia_chamada_funcao(); } lista_parametros_reais T_FECHA_PARENTESES
+   { chamar_subrot(); }
+   | { carregar_simbolo_salvo(); }
 
 
 %%
