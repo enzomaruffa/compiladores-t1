@@ -72,9 +72,9 @@ void gera_armz(simbolo_t* simbolo) {
     imprimeErro(erro);
   }
 
-  if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == FUNCAO) {
+  if (simbolo->categoria == PROCEDIMENTO) {
     char erro[200];
-    sprintf(erro, "Procedimento ou função não pode ser usado para armazenar variável: %s", token);
+    sprintf(erro, "Procedimento não pode ser usado para armazenar variável: %s", token);
     imprimeErro(erro);
   }
 
@@ -90,6 +90,9 @@ void gera_armz(simbolo_t* simbolo) {
     sprintf(comando, "ARMZ %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
   } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
     sprintf(comando, "ARMI %d, %d", simbolo->nivel_lexico, simbolo->parametro.deslocamento);
+  } else if (simbolo->categoria == FUNCAO) { 
+    int num_params = proc_get_qtd_param(simbolo);
+    sprintf(comando, "ARMZ %d, %d", simbolo->nivel_lexico, -4 - num_params);
   }
 
   geraCodigo(NULL, comando);
@@ -144,8 +147,15 @@ void desempilhar_infos_chamada__subrot() {
   free(infos);
 }
 
-simbolo_t *get_chamada_subrot_atual() { 
+simbolo_t *get_simbolo_relevante_atual() { 
+  #ifdef DEPURA
+  printf("[get_simbolo_relevante_atual] chamando_funcao: %d\n", chamando_funcao);
+  #endif
+
   if (chamando_funcao) { 
+    #ifdef DEPURA
+    printf("[get_simbolo_relevante_atual] buscando simbolo salvo: %s", simbolo_salvo);
+    #endif
     return pilha_get_by_id_simbolo(tabela_simbolos, simbolo_salvo);
   }
   return simbolo_esquerda_atual;
@@ -483,6 +493,7 @@ void salvar_simbolo_identificador(char *token) {
 
 void carregar_simbolo_salvo() {
   carregar_simbolo(simbolo_salvo);
+  strcpy(simbolo_salvo, "");
 }
 
 void inicia_registro_subrot() {
@@ -537,7 +548,7 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
 void inicia_chamada_subrot() { 
   simbolo_t *subrot;
 
-  subrot = get_chamada_subrot_atual();
+  subrot = get_simbolo_relevante_atual();
 
   if (subrot == NULL) {
     char erro[200];
@@ -599,14 +610,11 @@ void finaliza_parametros_subrotina() {
 }
 
 void chamar_subrot() {
-  simbolo_t *subrot;
-
-  subrot = get_chamada_subrot_atual();
-
   infos_chamada_subrot_t *chamada = pilha_pop_chamada_subrot(pilha_chamada_subrot);
+  simbolo_t *subrot = chamada->simbolo;
+
 
   // TODO: Verificar se o número de parâmetros está correto, comparando com o topo da pilha de chamada de subrotinas
-
 
   if (subrot == NULL) {
     char erro[200];
@@ -658,7 +666,7 @@ void verifica_se_pode_chamar_funcao() {
   if (chamada_atual != NULL) {
     int num_parametro_atual = chamada_atual->parametro_atual;
 
-    simbolo_t *subrot = get_chamada_subrot_atual();
+    simbolo_t *subrot = chamada_atual->simbolo;
     simbolo_t *param = proc_get_param_at(subrot, num_parametro_atual);
 
     if (param == NULL) {
