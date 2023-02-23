@@ -1,0 +1,13 @@
+program exemplo74 (input, output);
+var y: integer;
+   procedure g(t:integer);
+   var y : integer;
+   begin
+      y:=t*t; z:=z+x+y;
+      write(z)
+   end
+procedure h (y : integer);
+var x : integer;
+begin 
+   
+

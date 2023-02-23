@@ -1,0 +1,52 @@
+program     # program 
+ ident      # exemploErro2 
+ abre_parenteses      # ( 
+ ident      # input 
+ virgula      # , 
+ ident      # output 
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+var      # var 
+ ident      # n 
+[registra_var] n, 0, 0
+ virgula      # , 
+ ident      # k 
+[registra_var] k, 0, 1
+ dois pontos     # : 
+ integer      # integer 
+[setar_tipo_variavel] setou tipo 0 para k
+[setar_tipo_variavel] setou tipo 0 para n
+ pt_virgula      # ; 
+begin     # begin 
+[comecar_bloco]
+[finalizar_bloco]
+ read      # read 
+ abre_parenteses      # ( 
+ ident      # n 
+[gera_armz]
+[gera_armz] simbolo->categoria: 0, simbolo->nivel_lexico: 0
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+ read      # read 
+ abre_parenteses      # ( 
+ ident      # k 
+[gera_armz]
+[gera_armz] simbolo->categoria: 0, simbolo->nivel_lexico: 0
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+if       # if 
+ abre_parenteses      # ( 
+ ident      # n 
+[salvar_simbolo_identificador] 'n'
+[empilha_tipo_simbolo] empilhou tipo 0
++        # + 
+[carregar_simbolo]: n
+[carregar_simbolo]: categoria: 0, nivel lexico: 0, deslocament: 0 
+ numero     # 1 
+[empilha_tipo] empilhou tipo 0
+ fecha_parenteses     # ) 
+[compara_tipos] comparando tipos: (0 0) vs (0 0) = 0
+[compara_tipos] topo da pilha: 0
+then     # then 
+[empilha_tipo] empilhou tipo 1
+[compara_tipos] comparando tipos: (1 1) vs (0 1) = 2

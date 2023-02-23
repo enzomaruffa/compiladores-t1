@@ -1,0 +1,24 @@
+program exercicio1 (input, output);
+var t :  integer;
+   function g(n,r : integer; var k:integer):integer;
+   var t : integer
+      function f(i: integer):integer;
+      var s,t : integer;
+      begin (* f *)
+         s:=i*i;
+         if i<s then
+         begin
+            k:=k+1;
+            f:=0;
+         end
+         else
+         begin
+            f:=g(n-1,r-s,t)+f(i+1);
+         k:=k+1
+         end
+      end (* f *)
+   begin (* g *)
+   end(* g *)
+
+begin(* principal *)
+end(* principal *)
