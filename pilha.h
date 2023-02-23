@@ -14,6 +14,7 @@ typedef struct item_pilha {
         simbolo_t *simbolo;
         infos_compilador_t *infos;
         infos_chamada_subrot_t *infos_chamada_subrot;
+        tipo_var tipo;
     };
 } item_pilha_t;
 
@@ -46,8 +47,9 @@ void pilha_push_chamada_subrot(pilha_t *pilha, infos_chamada_subrot_t *infos_cha
 infos_chamada_subrot_t *pilha_pop_chamada_subrot(pilha_t *pilha);
 infos_chamada_subrot_t *pilha_peek_chamada_subrot(pilha_t *pilha);
 
-void pilha_push_n(pilha_t *pilha, int n_symbs);
-int pilha_pop_n(pilha_t *pilha);
-int pilha_peek_n_symbs(pilha_t *pilha);
+void pilha_push_tipo(pilha_t *pilha, tipo_var tipo);
+tipo_var pilha_pop_tipo(pilha_t *pilha);
+tipo_var pilha_peek_tipo(pilha_t *pilha);
+
 
 #endif /* pilha_h */

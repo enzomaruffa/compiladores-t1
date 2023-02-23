@@ -211,7 +211,11 @@ comando_identificador_esquerda_fim:
    | chamada_procedure
 
 atribuicao:
-   T_ATRIBUICAO expr { armazenar_valor_identificador_esquerda(); }
+   T_ATRIBUICAO expr { 
+      empilha_tipo_identificador_esquerda(); 
+      compara_tipos(QUALQUER_TIPO, QUALQUER_TIPO, QUALQUER_TIPO); 
+      armazenar_valor_identificador_esquerda(); 
+   }
 
 chamada_procedure:
    T_ABRE_PARENTESES { inicia_chamada_subrot(); } lista_parametros_reais T_FECHA_PARENTESES
@@ -242,11 +246,18 @@ lista_write:
 
 while:
    T_WHILE { comecar_while(); }
-   expr { avaliar_while(); }
+   expr { 
+      empilha_tipo(BOOLEAN); 
+      compara_tipos(BOOLEAN, BOOLEAN, QUALQUER_TIPO); 
+      avaliar_while(); }
    T_DO comando_composto { finalizar_while(); }
 
 if:
-   T_IF expr { avaliar_if(); }
+   T_IF expr { 
+      empilha_tipo(BOOLEAN); 
+      compara_tipos(BOOLEAN, BOOLEAN, QUALQUER_TIPO); 
+      avaliar_if(); 
+   }
    T_THEN comando_ou_composto { finalizar_if(); }
    else { finalizar_else(); }
 
@@ -256,7 +267,7 @@ else:
 
 expr:
    expr_simples
-   | expr_simples relacao expr_simples { gerar_relacao(); }
+   | expr_simples relacao expr_simples { compara_tipos(QUALQUER_TIPO, QUALQUER_TIPO, BOOLEAN); gerar_relacao(); }
 ;
 
 expr_simples:
@@ -265,7 +276,7 @@ expr_simples:
 
 termo_com_sinal:
    T_MAIS termo
-   | T_MENOS termo
+   | T_MENOS termo 
    | termo
 ;
 
@@ -276,9 +287,9 @@ lista_op_termos:
 ;
 
 op_termo:
-   T_MAIS termo { geraCodigo(NULL, "SOMA"); }
-   | T_MENOS termo { geraCodigo(NULL, "SUBT"); }
-   | T_OR termo { geraCodigo(NULL, "DISJ"); }
+   T_MAIS termo { geraCodigo(NULL, "SOMA"); compara_tipos(INTEGER, INTEGER, INTEGER); }
+   | T_MENOS termo { geraCodigo(NULL, "SUBT"); compara_tipos(INTEGER, INTEGER, INTEGER); }
+   | T_OR termo { geraCodigo(NULL, "DISJ"); compara_tipos(BOOLEAN, BOOLEAN, BOOLEAN); }
 ;
 
 termo:
@@ -287,16 +298,16 @@ termo:
 ;
 
 op_fator:
-   T_VEZES fator { geraCodigo(NULL, "MULT"); }
-   | T_DIV fator { geraCodigo(NULL, "DIVI"); }
-   | T_AND fator { geraCodigo(NULL, "CONJ"); }
+   T_VEZES fator { geraCodigo(NULL, "MULT"); compara_tipos(INTEGER, INTEGER, INTEGER); }
+   | T_DIV fator { geraCodigo(NULL, "DIVI"); compara_tipos(INTEGER, INTEGER, INTEGER); }
+   | T_AND fator { geraCodigo(NULL, "CONJ"); compara_tipos(BOOLEAN, BOOLEAN, BOOLEAN); }
 ;
 
 fator:
-   T_IDENT { salvar_simbolo_identificador(token);} var_ou_chama_funcao
-   | T_NUMERO { carregar_constante(token); }
+   T_IDENT { salvar_simbolo_identificador(token); empilha_tipo_token(token); } var_ou_chama_funcao
+   | T_NUMERO { carregar_constante(token); empilha_tipo(INTEGER); }
    | T_ABRE_PARENTESES expr T_FECHA_PARENTESES
-   | T_NOT fator
+   | T_NOT fator { empilha_tipo(BOOLEAN); }
 ;
 
 relacao:

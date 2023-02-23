@@ -157,38 +157,6 @@ infos_compilador_t* pilha_peek_infos(pilha_t *pilha) {
     }
 }
 
-// MARK: Pilha de inteiros
-// void pilha_push_n(pilha *pilha, int n_symbs) {
-//     item_pilha *item = malloc(sizeof(item_pilha));
-//     item->n_simbolos = n_symbs;
-//     item->prev = pilha->top;
-//     pilha->top = item;
-//     pilha->length++;
-// }
-
-// int pilha_pop_n(pilha *pilha) {
-//     item_pilha *item = pilha->top;
-//     if (item) {
-//         pilha->top = item->prev;
-//         pilha->length--;
-//         int n_symbs = item->n_simbolos;
-//         free(item);
-//         return n_symbs;
-//     } else {
-//         return -1;
-//     }
-// }
-
-// int pilha_peek_n_symbs(pilha *pilha) {
-//     item_pilha *item = pilha->top;
-//     if (item) {
-//         return item->n_simbolos;
-//     } else {
-//         return -1;
-//     }
-// }
-
-
 // Pilha de chamada de subrot
 void pilha_push_chamada_subrot(pilha_t *pilha, infos_chamada_subrot_t *infos_chamada_subrot) { 
     item_pilha_t *item = malloc(sizeof(item_pilha_t));
@@ -217,5 +185,37 @@ infos_chamada_subrot_t *pilha_peek_chamada_subrot(pilha_t *pilha) {
         return item->infos_chamada_subrot;
     } else {
         return NULL;
+    }
+}
+
+// Pilha de tipos
+
+void pilha_push_tipo(pilha_t *pilha, tipo_var tipo) {
+    item_pilha_t *item = malloc(sizeof(item_pilha_t));
+    item->tipo = tipo;
+    item->prev = pilha->top;
+    pilha->top = item;
+    pilha->length++;
+}
+
+tipo_var pilha_pop_tipo(pilha_t *pilha) {
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        pilha->top = item->prev;
+        pilha->length--;
+        tipo_var tipo = item->tipo;
+        free(item);
+        return tipo;
+    } else {
+        return QUALQUER_TIPO;
+    }
+}
+
+tipo_var pilha_peek_tipo(pilha_t *pilha) {
+    item_pilha_t *item = pilha->top;
+    if (item) {
+        return item->tipo;
+    } else {
+        return QUALQUER_TIPO;
     }
 }

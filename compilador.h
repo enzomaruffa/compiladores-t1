@@ -71,7 +71,9 @@ typedef enum {
 } categoria_simbolo;
 
 typedef enum {
-  INTEGER
+  INTEGER,
+  BOOLEAN,
+  QUALQUER_TIPO
 } tipo_var;
 
 
@@ -145,5 +147,10 @@ void proximo_parametro_chamada_subrot();
 
 void setar_tipo_variavel(tipo_var tipo);
 void finaliza_cabecalho_subrot();
+
+void compara_tipos(tipo_var tipo_1, tipo_var tipo_2, tipo_var tipo_resultado);
+void empilha_tipo(tipo_var tipo);
+void empilha_tipo_token(char* token);
+void empilha_tipo_identificador_esquerda();
 
 #endif

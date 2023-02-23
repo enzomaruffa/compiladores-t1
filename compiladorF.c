@@ -36,7 +36,7 @@ pilha_t *pilha_rotulos = NULL;
 pilha_t *pilha_subrotinas = NULL;
 pilha_t *pilha_infos = NULL;
 pilha_t *pilha_chamada_subrot = NULL;
-
+pilha_t *pilha_tipos = NULL;
 
 // Global
 int rotulos_criados = 0;
@@ -67,18 +67,18 @@ void criar_proximo_rotulo(char *rotulo) {
 
 void gera_armz(simbolo_t* simbolo) {
   #ifdef DEPURA
-  printf("[gera_armz]");
+  printf("[gera_armz]\n");
   #endif
 
   if (simbolo == NULL) {
     char erro[200];
-    sprintf(erro, "Variável não declarada: %s", token);
+    sprintf(erro, "Variável não declarada: %s\n", token);
     imprimeErro(erro);
   }
 
   if (simbolo->categoria == PROCEDIMENTO) {
     char erro[200];
-    sprintf(erro, "Procedimento não pode ser usado para armazenar variável: %s", token);
+    sprintf(erro, "Procedimento não pode ser usado para armazenar variável: %s\n", token);
     imprimeErro(erro);
   }
 
@@ -158,7 +158,7 @@ simbolo_t *get_simbolo_relevante_atual() {
 
   if (chamando_funcao) { 
     #ifdef DEPURA
-    printf("[get_simbolo_relevante_atual] buscando simbolo salvo: %s", simbolo_salvo);
+    printf("[get_simbolo_relevante_atual] buscando simbolo salvo: %s\n", simbolo_salvo);
     #endif
     return pilha_get_by_id_simbolo(tabela_simbolos, simbolo_salvo);
   }
@@ -171,6 +171,30 @@ void adicionar_simbolo_tipo_pendente(simbolo_t *simbolo) {
   #endif
 
   pilha_push_simbolo(pilha_simbolos_tipo_pendente, simbolo);
+}
+
+void empilha_tipo_simbolo(simbolo_t *simbolo) {
+  if (simbolo == NULL) {
+    char erro[200];
+    sprintf(erro, "Símbolo não declarada. [empilha_tipo_simbolo]");
+    imprimeErro(erro);
+  }
+
+  tipo_var tipo;
+  if (simbolo->categoria == VARIAVEL_SIMPLES) {
+    tipo = simbolo->variavel.tipo;
+  } else if (simbolo->categoria == FUNCAO) {
+    tipo = simbolo->procedimento.tipo_retorno;
+  } else {
+    char erro[200];
+    sprintf(erro, "Tipo inválido para variável. [empilha_tipo_simbolo]");
+    imprimeErro(erro);
+  }
+
+  pilha_push_tipo(pilha_tipos, tipo);
+  #ifdef DEPURA
+  printf("[empilha_tipo_simbolo] empilhou tipo %d\n", tipo);
+  #endif
 }
 
 // === PUBLICO ===
@@ -199,13 +223,14 @@ void inicia_vars_compilador() {
   pilha_infos = pilha_create();
   pilha_chamada_subrot = pilha_create();
   pilha_simbolos_tipo_pendente = pilha_create();
+  pilha_tipos = pilha_create();
   infos_atuais = criar_infos_compilador();
 }
 
 // === Criação de simbolos
 void registra_var(char* token) {
   #ifdef DEPURA
-  printf("[registra_var] %s, %d, %d", token, infos_atuais->nivel_lexico, infos_atuais->deslocamento);
+  printf("[registra_var] %s, %d, %d\n", token, infos_atuais->nivel_lexico, infos_atuais->deslocamento);
   #endif
 
   simbolo_t* simbolo = criar_simbolo(token);
@@ -280,9 +305,6 @@ void carregar_simbolo(char* token) {
 
   // Caso eu esteja em uma chamada de outra subrotina e quero chamar uma nova como parâmetro, preciso aumentar o numero atual de parametros
   infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
-  #ifdef DEPURA
-  printf("[carregar_simbolo]: chamada_atual: %p\n", chamada_atual);
-  #endif
 
   if (chamada_atual != NULL) {
     if (simbolo->categoria == PROCEDIMENTO) {
@@ -762,4 +784,75 @@ void setar_tipo_variavel(tipo_var tipo) {
 
 void finaliza_cabecalho_subrot() {
   subrotina_atual = NULL;
+}
+
+void compara_tipos(tipo_var tipo_1, tipo_var tipo_2, tipo_var tipo_resultado) {
+  // Pega os dois tipos do topo da pilha
+  // Se tipo_1 não for nulo, o segundo tem que ser igual a tipo_1
+  // Se tipo_2 não for nulo, o primeiro tem que ser igual a tipo_2
+  // Se tipo_1 e tipo_2 forem nulos, os dois tem que ser iguais
+  tipo_var tipo_2_pilha = pilha_pop_tipo(pilha_tipos);
+  tipo_var tipo_1_pilha = pilha_pop_tipo(pilha_tipos);
+
+  #ifdef DEPURA
+  printf("[compara_tipos] comparando tipos: (%d %d) vs (%d %d) = %d\n", tipo_1, tipo_2, tipo_1_pilha, tipo_2_pilha, tipo_resultado);
+  #endif
+
+  if (tipo_1 != QUALQUER_TIPO && tipo_1 != tipo_1_pilha) {
+    char erro[200];
+    sprintf(erro, "Tipos incompatíveis. [compara_tipos]");
+    imprimeErro(erro);
+  }
+
+  if (tipo_2 != QUALQUER_TIPO && tipo_2 != tipo_2_pilha) {
+    char erro[200];
+    sprintf(erro, "Tipos incompatíveis. [compara_tipos]");
+    imprimeErro(erro);
+  }
+
+  if (tipo_1 == QUALQUER_TIPO && tipo_2 == QUALQUER_TIPO && tipo_1_pilha != tipo_2_pilha) {
+    char erro[200];
+    sprintf(erro, "Tipos incompatíveis. [compara_tipos]");
+    imprimeErro(erro);
+  }
+  
+  if (tipo_resultado != QUALQUER_TIPO) {
+    pilha_push_tipo(pilha_tipos, tipo_resultado);
+  }
+
+  // Printar o tipo do topo da pilha caso exista
+  #ifdef DEPURA
+  tipo_var topo = pilha_peek_tipo(pilha_tipos);
+
+  if (topo != QUALQUER_TIPO) {
+    printf("[compara_tipos] topo da pilha: %d\n", topo);
+  } else { 
+    printf("[compara_tipos] pilha vazia\n");
+  }
+  #endif
+  
+
+}
+
+void empilha_tipo(tipo_var tipo) {
+  #ifdef DEPURA
+  printf("[empilha_tipo] empilhou tipo %d\n", tipo);
+  #endif
+
+  pilha_push_tipo(pilha_tipos, tipo);
+}
+
+void empilha_tipo_token(char* token) { 
+  simbolo_t *simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
+  empilha_tipo_simbolo(simbolo);
+}
+
+void empilha_tipo_identificador_esquerda() {
+  if (simbolo_esquerda_atual == NULL) {
+    char erro[200];
+    sprintf(erro, "simbolo_esquerda_atual nulo. Erro interno do compilador. [armazenar_valor_identificador_esquerda]");
+    imprimeErro(erro);
+  }
+
+  empilha_tipo_simbolo(simbolo_esquerda_atual);
 }
