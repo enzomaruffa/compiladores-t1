@@ -196,6 +196,7 @@ params_formais_rep:
 secao_de_params_formais:
     T_VAR lista_params_ref T_DOIS_PONTOS tipo
     | lista_params_val T_DOIS_PONTOS tipo
+    |
 ;
 
 lista_params_ref:
@@ -209,7 +210,7 @@ lista_params_val:
 ;
 
 forward_ou_bloco:
-   T_FORWARD { marca_subrot_forward(); } T_PONTO_E_VIRGULA
+   T_FORWARD { marca_subrot_forward(); }
    | { inicia_bloco_subrot(); } bloco { finaliza_implementacao_subrot(); }
 
 comando_ou_composto:

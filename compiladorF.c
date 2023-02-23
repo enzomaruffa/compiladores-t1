@@ -46,6 +46,7 @@ int alocacoes_pendentes = 0;
 infos_compilador_t* infos_atuais;
 
 simbolo_t *subrotina_atual; // Função ou procedimento sendo declarado
+int verificando_forward = 0;
 
 // Atribuiçao atual
 simbolo_t *simbolo_esquerda_atual = NULL;
@@ -563,10 +564,6 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
     imprimeErro(erro);
   }
 
-  char *rotulo = malloc(10);
-  criar_proximo_rotulo(rotulo);
-
-  // Criar simbolo
   simbolo_t *subrot = criar_simbolo(token);
 
   if (tipo_subrot == FUNCAO) {
@@ -580,6 +577,18 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
   subrot->procedimento.deslocamento = 0;
   subrot->procedimento.primeiro_parametro = NULL;
 
+  if (declaracao_previa) { 
+    // Coloca na pilha de subrotinas
+    pilha_push_simbolo(pilha_subrotinas, declaracao_previa);
+    
+    // Setamos como a atual
+    subrotina_atual = subrot;
+    verificando_forward = 1;
+    return; 
+  }
+
+  char *rotulo = malloc(10);
+  criar_proximo_rotulo(rotulo);
   strcpy(subrot->procedimento.rotulo, rotulo);
 
   // Adicionar na tabela de símbolos
@@ -635,8 +644,11 @@ void registra_parametro(char* token, int por_referencia) {
   parametro->parametro.proximo_parametro = NULL;
   parametro->parametro.deslocamento = 0;
 
+  if (!verificando_forward) { 
+    pilha_push_simbolo(tabela_simbolos, parametro);
+  } 
+
   proc_adiciona_param(subrotina_atual, parametro);
-  pilha_push_simbolo(tabela_simbolos, parametro);
   pilha_push_simbolo(pilha_simbolos_tipo_pendente, parametro);
 }
 
@@ -697,6 +709,10 @@ void chamar_subrot() {
 }
 
 void marca_subrot_forward() {
+  #ifdef DEPURA 
+  printf("[marca_subrot_forward]\n");
+  #endif
+
   // Pegar subrotina
   simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
 
@@ -704,6 +720,10 @@ void marca_subrot_forward() {
 }
 
 void inicia_bloco_subrot() {
+  #ifdef DEPURA
+  printf("[inicia_bloco_subrot]\n");
+  #endif
+
   // Pegar subrotina
   simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
 
@@ -714,6 +734,10 @@ void inicia_bloco_subrot() {
 }
 
 void finaliza_implementacao_subrot() {
+  #ifdef DEPURA
+  printf("[finaliza_implementacao_subrot]\n");
+  #endif
+
   // Pegar subrotina
   simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
 
@@ -737,6 +761,10 @@ void finaliza_implementacao_subrot() {
 }
 
 void finaliza_subrot() {
+  #ifdef DEPURA
+  printf("[finaliza_subrot]\n");
+  #endif
+
   // Desempilhar subrotina
   simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
 
@@ -831,7 +859,56 @@ void setar_tipo_variavel(tipo_var tipo) {
 }
 
 void finaliza_cabecalho_subrot() {
+  if (verificando_forward) { 
+    // Compara subrotina_atual com a subrotina na tabela de símbolos de mesmo token
+    simbolo_t *subrotina_tabela = pilha_get_by_id_simbolo(tabela_simbolos, subrotina_atual->id);
+
+    // Compara os tipos e os parâmetros
+    if (subrotina_tabela != NULL) {
+      if (subrotina_tabela->categoria != subrotina_atual->categoria) {
+        char erro[200];
+        sprintf(erro, "Subrotina %s já declarada com categoria diferente. [finaliza_cabecalho_subrot]", subrotina_atual->id);
+        imprimeErro(erro);
+      }
+
+      if (subrotina_tabela->procedimento.tipo_retorno != subrotina_atual->procedimento.tipo_retorno) {
+        char erro[200];
+        sprintf(erro, "Subrotina %s já declarada com tipo de retorno diferente. [finaliza_cabecalho_subrot]", subrotina_atual->id);
+        imprimeErro(erro);
+      }
+
+      simbolo_t *param_tabela;
+      simbolo_t *param_atual;
+      int i = 0;
+
+      while ((param_tabela = proc_get_param_at(subrotina_tabela, i)) != NULL) {
+        param_atual = proc_get_param_at(subrotina_atual, i);
+
+        if (param_atual == NULL) {
+          char erro[200];
+          sprintf(erro, "Subrotina %s já declarada com número de parâmetros diferente. [finaliza_cabecalho_subrot]", subrotina_atual->id);
+          imprimeErro(erro);
+        }
+
+        if (param_atual->categoria != param_tabela->categoria) {
+          char erro[200];
+          sprintf(erro, "Subrotina %s já declarada com parâmetro %d de categoria diferente. [finaliza_cabecalho_subrot]", subrotina_atual->id, i);
+          imprimeErro(erro);
+        }
+
+        if (param_atual->parametro.tipo != param_tabela->parametro.tipo) {
+          char erro[200];
+          sprintf(erro, "Subrotina %s já declarada com parâmetro %d de tipo diferente. [finaliza_cabecalho_subrot]", subrotina_atual->id, i);
+          imprimeErro(erro);
+        }
+
+        i++;
+      }
+    }
+  }
+
   subrotina_atual = NULL;
+  verificando_forward = 0;
 }
 
 void compara_tipos(tipo_var tipo_1, tipo_var tipo_2, tipo_var tipo_resultado) {

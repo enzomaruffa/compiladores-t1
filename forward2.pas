@@ -4,13 +4,13 @@ procedure fun1() ; forward;
 
 procedure fun2();
 begin
-    writeln('Inside fun2. Calling fun1()');
+    write(2);
     fun1();
 end;
 
 procedure fun1();
 begin
-   writeln('Inside fun1');
+   write(1);
 end;
 
 begin
