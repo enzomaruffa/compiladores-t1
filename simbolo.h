@@ -31,6 +31,11 @@ typedef struct simbolo {
             char rotulo[4];
             struct simbolo *primeiro_parametro;
         } procedimento;
+
+        struct {
+            int definido;
+            char rotulo[4];
+        } label;
     };
 } simbolo_t;
 

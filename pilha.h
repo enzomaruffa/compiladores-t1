@@ -42,6 +42,7 @@ char* pilha_peek_label(pilha_t *pilha);
 void pilha_push_infos(pilha_t *pilha, infos_compilador_t *infos);
 infos_compilador_t* pilha_pop_infos(pilha_t *pilha);
 infos_compilador_t* pilha_peek_infos(pilha_t *pilha);
+infos_compilador_t* pilha_get_infos_by_nivel_lexico(pilha_t *pilha, int nivel_lexico);
 
 void pilha_push_chamada_subrot(pilha_t *pilha, infos_chamada_subrot_t *infos_chamada_subrot);
 infos_chamada_subrot_t *pilha_pop_chamada_subrot(pilha_t *pilha);

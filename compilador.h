@@ -68,6 +68,7 @@ typedef enum {
   PARAMETRO_FORMAL_REF,
   PROCEDIMENTO,
   FUNCAO,
+  LABEL
 } categoria_simbolo;
 
 typedef enum {
@@ -153,4 +154,7 @@ void empilha_tipo(tipo_var tipo);
 void empilha_tipo_token(char* token);
 void empilha_tipo_identificador_esquerda();
 
+void registra_goto(char* token);
+void comeco_goto(char *token);
+void chama_goto(char *token);
 #endif

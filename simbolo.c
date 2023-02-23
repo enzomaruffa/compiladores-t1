@@ -19,6 +19,8 @@ int get_deslocamento(simbolo_t *simbolo) {
             return simbolo->procedimento.deslocamento;
         case FUNCAO:
             return simbolo->procedimento.deslocamento;
+        case LABEL:
+            return 0;
     }
 }
 

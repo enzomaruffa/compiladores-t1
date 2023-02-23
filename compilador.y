@@ -84,6 +84,7 @@ lista_idents:
 ;
 
 bloco:
+   parte_declara_gotos
    parte_declara_vars
    { comecar_bloco();}
    parte_declara_subrots
@@ -129,6 +130,33 @@ lista_id_var:
    | T_IDENT {
       registra_var(token);
       incrementa_aloc_pendentes();
+   }
+;
+
+parte_declara_gotos:
+   goto
+;
+
+goto:
+   T_LABEL declara_gotos
+   |
+;
+
+declara_gotos:
+   declara_gotos declara_goto
+   | declara_goto
+;
+
+declara_goto:
+   lista_id_goto T_PONTO_E_VIRGULA
+;
+
+lista_id_goto:
+   lista_id_goto T_VIRGULA T_NUMERO {
+      registra_goto(token);
+   }
+   | T_NUMERO {
+      registra_goto(token);
    }
 ;
 
@@ -191,7 +219,7 @@ comandos:
    comando T_PONTO_E_VIRGULA comandos
    | comando T_PONTO_E_VIRGULA
    | comando
-   |
+   | comeco_goto comandos
 ;
 
 comando:
@@ -200,6 +228,7 @@ comando:
    | while
    | if
    | comando_identificador_esquerda
+   | chama_goto
 ;
 
 comando_identificador_esquerda:
@@ -324,6 +353,11 @@ var_ou_chama_funcao:
    { chamar_subrot(); }
    | { carregar_simbolo_salvo(); }
 
+comeco_goto:
+   T_NUMERO { comeco_goto(token); } T_DOIS_PONTOS
+
+chama_goto:
+   T_GOTO T_NUMERO { chama_goto(token); }
 
 %%
 

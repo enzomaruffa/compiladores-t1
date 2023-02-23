@@ -157,6 +157,15 @@ infos_compilador_t* pilha_peek_infos(pilha_t *pilha) {
     }
 }
 
+infos_compilador_t* pilha_get_infos_by_nivel_lexico(pilha_t *pilha, int nivel_lexico) {
+    for (item_pilha_t *item = pilha->top; item; item = item->prev) {
+        if (item->infos->nivel_lexico == nivel_lexico) {
+            return item->infos;
+        }
+    }
+    return NULL;
+}
+
 // Pilha de chamada de subrot
 void pilha_push_chamada_subrot(pilha_t *pilha, infos_chamada_subrot_t *infos_chamada_subrot) { 
     item_pilha_t *item = malloc(sizeof(item_pilha_t));

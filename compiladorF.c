@@ -76,7 +76,7 @@ void gera_armz(simbolo_t* simbolo) {
     imprimeErro(erro);
   }
 
-  if (simbolo->categoria == PROCEDIMENTO) {
+  if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == LABEL) {
     char erro[200];
     sprintf(erro, "Procedimento não pode ser usado para armazenar variável: %s\n", token);
     imprimeErro(erro);
@@ -274,6 +274,11 @@ void desalocar() {
   for (int i = 0; i < infos_atuais->deslocamento; i++) {
     pilha_pop_simbolo(tabela_simbolos);
   }
+
+  // Remover labels
+  for (int i = 0; i < infos_atuais->labels; i++) {
+    pilha_pop_simbolo(pilha_rotulos);
+  }
 }
 
 // === Carregamento
@@ -311,7 +316,7 @@ void carregar_simbolo(char* token) {
   infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
 
   if (chamada_atual != NULL) {
-    if (simbolo->categoria == PROCEDIMENTO) {
+    if (simbolo->categoria == PROCEDIMENTO || simbolo->categoria == LABEL) {
       char erro[200];
       sprintf(erro, "Procedimento não pode ser usado como expressão: %s", token);
       imprimeErro(erro);
@@ -880,4 +885,91 @@ void empilha_tipo_identificador_esquerda() {
   }
 
   empilha_tipo_simbolo(simbolo_esquerda_atual);
+}
+
+// GOTO
+void registra_goto(char *token) {
+  #ifdef DEPURA
+  printf("[registra_goto] registrando goto %s\n", token);
+  #endif
+
+  simbolo_t *simbolo = criar_simbolo(token);
+  simbolo->categoria = LABEL;
+  simbolo->nivel_lexico = infos_atuais->nivel_lexico;
+
+  char *rotuloGoto = malloc(10);
+  criar_proximo_rotulo(rotuloGoto);
+
+  strcpy(simbolo->label.rotulo, rotuloGoto);
+  simbolo->label.definido = 0;
+
+  free(rotuloGoto);
+
+  pilha_push_simbolo(tabela_simbolos, simbolo);
+
+  infos_atuais->labels += 1;
+}
+
+void comeco_goto(char *token) {
+  #ifdef DEPURA
+  printf("[comeco_goto] começando goto %s\n", token);
+  #endif
+
+  // Pega o símbolo
+  simbolo_t *simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
+
+  // Verifica se existe
+  if (simbolo == NULL) {
+    char erro[200];
+    sprintf(erro, "Label %s não foi definido. [comeco_goto]", token);
+    imprimeErro(erro);
+  }
+
+  // Verifica se é um goto
+  if (simbolo->categoria != LABEL) {
+    char erro[200];
+    sprintf(erro, "Identificador %s não é um label. [comeco_goto]", token);
+    imprimeErro(erro);
+  }
+
+  // Verifica se já não foi definido
+  if (simbolo->label.definido == 1) {
+    char erro[200];
+    sprintf(erro, "Label %s já foi definido. [comeco_goto]", token);
+    imprimeErro(erro);
+  }
+
+  // Marca como definido
+  simbolo->label.definido = 1;
+
+  char comando[100];
+  sprintf(comando, "ENRT %d, %d", simbolo->nivel_lexico, infos_atuais->deslocamento);
+  geraCodigo(simbolo->label.rotulo, comando);
+}
+
+void chama_goto(char *token) {
+  #ifdef DEPURA
+  printf("[chama_goto] chamando goto %s\n", token);
+  #endif
+
+  // Pega o símbolo
+  simbolo_t *simbolo = pilha_get_by_id_simbolo(tabela_simbolos, token);
+
+  // Verifica se existe
+  if (simbolo == NULL) {
+    char erro[200];
+    sprintf(erro, "Label %s não foi definido. [chama_goto]", token);
+    imprimeErro(erro);
+  }
+
+  // Verifica se é um goto
+  if (simbolo->categoria != LABEL) {
+    char erro[200];
+    sprintf(erro, "Identificador %s não é um label. [chama_goto]", token);
+    imprimeErro(erro);
+  }
+
+  char comando[100];
+  sprintf(comando, "DSVR %s, %d, %d", simbolo->label.rotulo, simbolo->nivel_lexico, infos_atuais->nivel_lexico);
+  geraCodigo(NULL, comando);
 }
