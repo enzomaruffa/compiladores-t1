@@ -747,6 +747,26 @@ void verifica_se_pode_chamar_funcao() {
 void proximo_parametro_chamada_subrot() {
   infos_chamada_subrot_t *chamada_atual = pilha_peek_chamada_subrot(pilha_chamada_subrot);
 
+  // Compara o tipo empilhado com o tipo esperado do parametro
+  if (chamada_atual != NULL) {
+    int num_parametro_atual = chamada_atual->parametro_atual;
+
+    simbolo_t *subrot = chamada_atual->simbolo;
+    simbolo_t *param = proc_get_param_at(subrot, num_parametro_atual);
+
+    if (param == NULL) {
+      char erro[200];
+      sprintf(erro, "Número de parâmetros inválido. [proximo_parametro_chamada_subrot]");
+      imprimeErro(erro);
+    }
+
+    #ifdef DEPURA
+    printf("[proximo_parametro_chamada_subrot] Empilhando tipo esperado do parametro %s: %d\n", param->id, param->parametro.tipo);
+    #endif
+    empilha_tipo_simbolo(param);
+    compara_tipos(QUALQUER_TIPO, QUALQUER_TIPO, QUALQUER_TIPO);
+  }
+
   if (chamada_atual != NULL) {
     chamada_atual->parametro_atual++;
   }
