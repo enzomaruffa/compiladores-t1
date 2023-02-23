@@ -28,11 +28,13 @@ int nl = 1;
 
 %}
 
+program (?i:program)
+
 pulo_linha [\n]
 
 descarte [\t ]+
 
-ident [a-zA-Z][a-zA-Z0-9]*
+ident [a-zA-Z_][a-zA-Z0-9_]*
 
 numero [0-9]+
 
@@ -40,7 +42,7 @@ comentario "(*".*"*)"
 
 %%
 
-program {
+{program} {
     simbolo = simb_program;
     strncpy (token, yytext, TAM_TOKEN);
     IMPRIME("program ");
