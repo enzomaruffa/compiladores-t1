@@ -1,0 +1,9 @@
+1) Relate as principais dificuldades ao longo do desenvolvimento.
+
+O desenvolvimento do projeto não foi trivial. As etapas iniciais foram bastante complexas, onde várias estruturas de dados globais que seriam utilizadas futuramente precisavam ser definidas e não havia um jeito "certo". Até que a ambiguidade fosse entendida, algumas semanas se passaram e tópicos de implementação se acumularam.
+Entretanto, a parte mais complexa da implementação foi a compreensão das regras de `expr`. Provavelmente por ser uma das regras iniciais e não estar ainda familiarizado com a ideia, demorei bastante tempo para conseguir fazer de um jeito robusto.
+Além disso, a integração da verificação de tipagem foi uma das etapas mais amedrontadoras do projeto - tanto que foi implementada por último. Primeiramente, a associação do tipo a variável/função não foi tão simples, graças as diversas maneiras de se declarar. A construção da pilha para armazenamento de tipos, simulando a árvore "decorada" foi trivial, mas conectar a pilha com as regras de expansão foi um processo bastante cuidadoso e trabalhoso. Além disso, foi necessário a criação de uma estrutura de tipagem com suporte a booleanos, uma vez que certas expressões podem ser atribuidas enquanto outras não.
+Outra etapa bastate difícil foi a integração das variáveis por referência, uma vez que toda a lógica de geração do armazenamento/carregamento deve ser alterada para incluir verificações tanto do parâmetro quanto da expressão sendo atribuida. Uma quantidade relativamente grande de tentativas foram necessárias para que todos os casos funcionassem apropriadamente.
+
+Finalmente, embora diversas dificuldades ocorreram, o desenvolvimento do trabalho foi bastante prazeroso e proveitoso. Construir um compilador, ainda que simples, era algo que sempre quis entender mais a fundo e estou satisfeito por ter noções básicas e entender melhor como certas coisas ocorrem por trás dos panos.
+
