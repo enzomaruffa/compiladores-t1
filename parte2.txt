@@ -1,0 +1,13 @@
+1) Descreva a idéia original para abordar a alteração;
+Considerando o funcionamento do projeto antes da alteração, a ideia original de modificação é a introdução de duas flags na struct simbolo_t que armazena o procedimento. 
+As flags são "forward", que indica se uma subrotina (procedimento ou função) foi declarado como forward e portanto ainda não tem o "corpo" definido, além da flag "implementado", que define se uma subrotina teve a implementação definida.
+Assim, no momento do registro do procedimento, caso um token forward seja encontrado imediatamente ao invés de um novo bloco, alteramos o procedimento recém-definido para ser marcado como forward e como não implementado.
+Em outro caso, deixamos forward desativado e como implementado. 
+Quando encontramos uma subrotina com a mesma forma, deve-se verificar se já foi implementado previamente ou não. Caso sim, um erro deve ser retornado pois uma subrotina não pode possuir duas implementações.
+Caso contrário, deve-se redefinir a subrotina e, ao final, comparar com a anterior. Caso exista diferença no cabeçalho, novamente, um erro deve ser retornado. Deve-se também verificar a presença do token forward. Caso esteja presente, outro erro deve ser retornado.
+    
+    a) O que deu certo e o que teve de ser modificado no trajeto?
+
+2) Quais foram os trechos do código que foram alterados?
+
+3) Quais os maiores problemas para fazer funcionar?

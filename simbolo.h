@@ -29,6 +29,8 @@ typedef struct simbolo {
             int deslocamento;
             tipo_var tipo_retorno;
             char rotulo[4];
+            int forward;
+            int implementado;
             struct simbolo *primeiro_parametro;
         } procedimento;
 

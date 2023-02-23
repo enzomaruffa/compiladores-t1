@@ -56,6 +56,7 @@ int num_vars;
 %token T_READ
 %token T_WRITE
 %token T_INTEGER
+%token T_FORWARD
 
 %nonassoc T_LOWER_THAN_ELSE
 %nonassoc T_ELSE

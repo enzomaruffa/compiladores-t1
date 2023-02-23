@@ -317,6 +317,13 @@ integer {
    return T_INTEGER;
 }
 
+forward {
+   simbolo = simb_forward;
+   strncpy (token, yytext, TAM_TOKEN);
+   IMPRIME(" forward  ");
+   return T_FORWARD;
+}
+
 {pulo_linha} {nl++;}
 
 {descarte}
