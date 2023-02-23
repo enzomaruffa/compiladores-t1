@@ -1,5 +1,1 @@
-- Verificar tipagem de condições
-- Verificar tipagem de parâmetros
-- Verificar tipagem de retorno de função
-- Verificar tipagem de atribuição
 - Testar ifs encadeados
