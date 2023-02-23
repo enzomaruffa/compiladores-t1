@@ -94,6 +94,15 @@ int pilha_busca_duplicata_simbolo(pilha_t *pilha, char *id, int nivel_lexico) {
     return 0;
 }
 
+simbolo_t *pilha_pega_duplicata_simbolo(pilha_t *pilha, char *id, int nivel_lexico) {
+    for (item_pilha_t *item = pilha->top; item; item = item->prev) {
+        if (!strcmp(item->simbolo->id, id) && item->simbolo->nivel_lexico == nivel_lexico) {
+            return item->simbolo;
+        }
+    }
+    return NULL;
+}
+
 // MARK: Label pilha
 void pilha_push_label(pilha_t *pilha, char *label) {
     item_pilha_t *item = malloc(sizeof(item_pilha_t));

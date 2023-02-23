@@ -209,8 +209,8 @@ lista_params_val:
 ;
 
 forward_ou_bloco:
-   T_FORWARD {} T_PONTO_E_VIRGULA
-   | bloco
+   T_FORWARD { marca_subrot_forward(); } T_PONTO_E_VIRGULA
+   | { inicia_bloco_subrot(); } bloco { finaliza_implementacao_subrot(); }
 
 comando_ou_composto:
    comando

@@ -556,9 +556,10 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
   // Percorrer toda a tabela de simbolos procurando por simbolos com o mesmo nome e nivel lexico
   // Se encontrar, erro
   // Se não encontrar, criar simbolo
-  if (pilha_busca_duplicata_simbolo(tabela_simbolos, token, infos_atuais->nivel_lexico)) {
+  simbolo_t *declaracao_previa = pilha_pega_duplicata_simbolo(tabela_simbolos, token, infos_atuais->nivel_lexico);
+  if (declaracao_previa && declaracao_previa->procedimento.implementado) {
     char erro[200];
-    sprintf(erro, "Subrotina %s já declarada no nível léxico %d. [registrar_subrot]", token, infos_atuais->nivel_lexico);
+    sprintf(erro, "Subrotina %s já implementada no nível léxico %d. [registrar_subrot]", token, infos_atuais->nivel_lexico);
     imprimeErro(erro);
   }
 
@@ -581,20 +582,12 @@ void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
 
   strcpy(subrot->procedimento.rotulo, rotulo);
 
-  // TODO: Adicionar tipo de retorno na subrotina
-
   // Adicionar na tabela de símbolos
   pilha_push_simbolo(tabela_simbolos, subrot);
-
-  // Gerar código ({rótulo do subrot}, ENPR {nível léxico do subrot})
-  char comando[100];
-  sprintf(comando, "ENPR %d", infos_atuais->nivel_lexico);
-  geraCodigo(rotulo, comando);
 
   // Coloca na pilha de subrotinas
   pilha_push_simbolo(pilha_subrotinas, subrot);
 
-  // Fazer para outras subrotinas
   subrotina_atual = subrot;
 }
 
@@ -703,9 +696,29 @@ void chamar_subrot() {
   chamando_funcao = 0;
 }
 
-void finaliza_subrot() {
-  // Desempilhar subrotina
-  simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
+void marca_subrot_forward() {
+  // Pegar subrotina
+  simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
+
+  subrotina->procedimento.forward = 1;
+}
+
+void inicia_bloco_subrot() {
+  // Pegar subrotina
+  simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
+
+  // Gerar código ({rótulo do subrot}, ENPR {nível léxico do subrot})
+  char comando[100];
+  sprintf(comando, "ENPR %d", infos_atuais->nivel_lexico);
+  geraCodigo(subrotina->procedimento.rotulo, comando);
+}
+
+void finaliza_implementacao_subrot() {
+  // Pegar subrotina
+  simbolo_t *subrotina = pilha_peek_simbolo(pilha_subrotinas);
+
+  // Marca como implementado
+  subrotina->procedimento.implementado = 1;
 
   // Gerar código (RTPR)
   char comando[100];
@@ -721,6 +734,11 @@ void finaliza_subrot() {
   for (int i = 0; i < qtd_parametros; i++) {
     pilha_pop_simbolo(tabela_simbolos);
   }
+}
+
+void finaliza_subrot() {
+  // Desempilhar subrotina
+  simbolo_t *subrotina = pilha_pop_simbolo(pilha_subrotinas);
 
   // Decrementa o nivel léxico
   diminuir_nivel_lexico();

@@ -142,6 +142,9 @@ void inicia_chamada_subrot();
 void registra_parametro(char* token, int por_referencia);
 void finaliza_parametros_subrotina();
 void chamar_subrot();
+void marca_subrot_forward();
+void inicia_bloco_subrot();
+void finaliza_implementacao_subrot();
 void finaliza_subrot();
 
 void verifica_se_pode_chamar_funcao();
