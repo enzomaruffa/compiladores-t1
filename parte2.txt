@@ -7,7 +7,27 @@ Quando encontramos uma subrotina com a mesma forma, deve-se verificar se já foi
 Caso contrário, deve-se redefinir a subrotina e, ao final, comparar com a anterior. Caso exista diferença no cabeçalho, novamente, um erro deve ser retornado. Deve-se também verificar a presença do token forward. Caso esteja presente, outro erro deve ser retornado.
     
     a) O que deu certo e o que teve de ser modificado no trajeto?
+    A implementação, no geral, deu certo. Alguns detalhes adicionais que precisaram ser implementados foram o suporte ao `writeln` e ignorar `strings` no write. Além disso, um pequeno bug foi encontrado onde subrotinas sem parâmetros não eram reconhecidas. Ambos os bugs foram arrumados no trabalho original e alterado.
+    Em termos do planejamento original, um problema inesperado foi registrar os parâmetros da "segunda" declaração - ou seja, após o forward. Foi necessário adicionar uma variável global de controle, `verificando_forward`, que é utilizada na verificação do final do cabeçalho, onde são verificados os parâmetros da declaração original e da nova.
 
 2) Quais foram os trechos do código que foram alterados?
+Resumidamente, foi necessário: 
+- adicionar o símbolo `simb_forward` no compilador.h
+- adicionar a regra de parsing para forward no compilador.l
+- adicionar o token `T_FORWARD` no compilador.y
+- adicionar as flags `forward`/`implementado` na struct simbolo_t em simbolo.h
+- adicionar a regra forward_ou_bloco: 
+    ```
+    T_FORWARD { marca_subrot_forward(); } 
+    | { inicia_bloco_subrot(); } bloco { finaliza_implementacao_subrot(); }
+    ```
+    utilizada para decidir como prosseguir ao final do cabeçalho da subrotina
+- adicionar as funções `void marca_subrot_forward();`, `void inicia_bloco_subrot();`, `void finaliza_implementacao_subrot();` em compilador.h e suas respectivas implementações em compiladorF.c
+- alterar a busca de duplicatas na tabela de símbolos dentro da função de registro de subrotinas para buscar a duplicada antes de reportar um erro, antes verificando se não é uma subrotina forward
+- adicionar o controle da flag `verificando_forward` caso uma duplicada prévia e forward seja encontrada no caso adicionar_simbolo_tipo_pendente
+- adicionar a verificação de cabeçalho na `finaliza_cabecalho_subrot();`, onde compara-se a declaração anterior, forward, com a declaração atual
 
 3) Quais os maiores problemas para fazer funcionar?
+Em geral, a manutenção do próprio código. Conforme o projeto foi desenvolvido, duas maneiras de acesso a subrotina atual foram desenvolvidos: uma variável global `subrotina_atual` e uma pilha de subrotinas. A `subrotina_atual` não é mais necessária, uma vez que pode-se apenas pegar do topo da pilha.
+Entretanto, para o desenvolvimento do forward, o uso da `subrotina_atual` foi bastante prático para armazenar a segunda declaração sem alterações no código da busca por duplicatas. Assim, a maior dificuldade de implementação foi debugar os casos onde a subrotina deveria ou não ser empilhada e, caso sim, se a segunda ou a primeira declaração.
+Além disso, um pequeno bug que atrasou a implementação foi, na primeira tentativa, a declaração de `T_PONTO_E_VIRGULA` ao final de `T_FORWARD { marca_subrot_forward(); }`. O token não é necessário pois é verificado na regra "pai". Com a adição duplicada, o compilador esperava dois `;` ao invés de apenas um.
