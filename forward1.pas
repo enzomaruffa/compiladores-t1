@@ -32,5 +32,5 @@ end;
 
 begin
   res := max(5,10);
-  write(res);
+  writeln('The maximum number is: ', res);
 end.

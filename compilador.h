@@ -60,7 +60,9 @@ typedef enum simbolos
   simb_read,
   simb_write,
   simb_integer,
-  simb_forward
+  simb_forward,
+  simb_writeln,
+  simb_string,
 } simbolos;
 
 typedef enum {
