@@ -463,11 +463,12 @@ void finalizar_while() {
 
 // === If
 void avaliar_if() {
+  char *rotuloFim = malloc(10);
+  criar_proximo_rotulo(rotuloFim);
+  
   char *rotuloElse = malloc(10);
   criar_proximo_rotulo(rotuloElse);
 
-  char *rotuloFim = malloc(10);
-  criar_proximo_rotulo(rotuloFim);
 
   pilha_push_label(pilha_rotulos, rotuloFim);
   pilha_push_label(pilha_rotulos, rotuloElse);
