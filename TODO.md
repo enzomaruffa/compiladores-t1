@@ -3,5 +3,3 @@
 - Verificar tipagem de retorno de função
 - Verificar tipagem de atribuição
 - Testar ifs encadeados
-- Otimizar blocos sem subrots definidas
-- Adicionar CREN

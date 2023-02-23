@@ -37,6 +37,7 @@ pilha_t *pilha_subrotinas = NULL;
 pilha_t *pilha_infos = NULL;
 pilha_t *pilha_chamada_subrot = NULL;
 
+
 // Global
 int rotulos_criados = 0;
 
@@ -54,6 +55,9 @@ char simbolo_salvo[100];
 
 // Caso esteja chamando uma função
 int chamando_funcao = 0;
+
+// Guarda os simbolos cujo tipo será definido
+pilha_t *pilha_simbolos_tipo_pendente = NULL;
 
 // === PRIVADO ===
 void criar_proximo_rotulo(char *rotulo) {
@@ -161,6 +165,14 @@ simbolo_t *get_simbolo_relevante_atual() {
   return simbolo_esquerda_atual;
 }
 
+void adicionar_simbolo_tipo_pendente(simbolo_t *simbolo) {
+  #ifdef DEPURA
+  printf("[adicionar_simbolo_tipo_pendente] simbolo: %s\n", simbolo->id);
+  #endif
+
+  pilha_push_simbolo(pilha_simbolos_tipo_pendente, simbolo);
+}
+
 // === PUBLICO ===
 void geraCodigo (char* rot, char* comando) {
   if (fp == NULL) {
@@ -186,6 +198,7 @@ void inicia_vars_compilador() {
   pilha_subrotinas = pilha_create();
   pilha_infos = pilha_create();
   pilha_chamada_subrot = pilha_create();
+  pilha_simbolos_tipo_pendente = pilha_create();
   infos_atuais = criar_infos_compilador();
 }
 
@@ -202,6 +215,7 @@ void registra_var(char* token) {
   infos_atuais->deslocamento += 1;
 
   pilha_push_simbolo(tabela_simbolos, simbolo);
+  pilha_push_simbolo(pilha_simbolos_tipo_pendente, simbolo);
 }
 
 // === Alocação
@@ -502,12 +516,19 @@ void inicia_registro_subrot() {
 }
 
 void registrar_subrot(char* token, categoria_simbolo tipo_subrot) {
-  // TODO: Verificar se já existe?
   // TODO: Verificar se é uma palavra reservada?
-
   #ifdef DEPURA
   printf("[registrar_subrot]: %s\n", token);
   #endif
+
+  // Percorrer toda a tabela de simbolos procurando por simbolos com o mesmo nome e nivel lexico
+  // Se encontrar, erro
+  // Se não encontrar, criar simbolo
+  if (pilha_busca_duplicata_simbolo(tabela_simbolos, token, infos_atuais->nivel_lexico)) {
+    char erro[200];
+    sprintf(erro, "Subrotina %s já declarada no nível léxico %d. [registrar_subrot]", token, infos_atuais->nivel_lexico);
+    imprimeErro(erro);
+  }
 
   char *rotulo = malloc(10);
   criar_proximo_rotulo(rotulo);
@@ -591,6 +612,7 @@ void registra_parametro(char* token, int por_referencia) {
 
   proc_adiciona_param(subrotina_atual, parametro);
   pilha_push_simbolo(tabela_simbolos, parametro);
+  pilha_push_simbolo(pilha_simbolos_tipo_pendente, parametro);
 }
 
 void finaliza_parametros_subrotina() {
@@ -605,8 +627,6 @@ void finaliza_parametros_subrotina() {
         p = p->parametro.proximo_parametro, qtd_parametros--) {
       p->parametro.deslocamento = -3 - qtd_parametros;
   }
-
-  subrotina_atual = NULL;
 }
 
 void chamar_subrot() {
@@ -623,8 +643,6 @@ void chamar_subrot() {
     subrot = chamada->simbolo;
   }
 
-  // TODO: Verificar se o número de parâmetros está correto, comparando com o topo da pilha de chamada de subrotinas
-
   if (subrot == NULL) {
     char erro[200];
     sprintf(erro, "Subrotina não declarada. [chamar_subrot]");
@@ -636,6 +654,14 @@ void chamar_subrot() {
     char erro[200];
     sprintf(erro, "'%s' não é uma subrotina. [chamar_subrot]", subrot->id);
     imprimeErro(erro);
+  }
+
+  if (chamada != NULL) { 
+    if (chamada->parametro_atual != proc_get_qtd_param(subrot)) {
+      char erro[200];
+      sprintf(erro, "Número de parâmetros incorreto. [chamar_subrot]");
+      imprimeErro(erro);
+    }
   }
 
   char comando[100];
@@ -698,4 +724,42 @@ void proximo_parametro_chamada_subrot() {
   if (chamada_atual != NULL) {
     chamada_atual->parametro_atual++;
   }
+}
+
+void setar_tipo_variavel(tipo_var tipo) { 
+  simbolo_t *simbolo;
+  simbolo = pilha_peek_simbolo(pilha_simbolos_tipo_pendente);
+
+  // Estou definindo uma subrotina, então preciso setar o tipo de retorno
+  if (subrotina_atual && simbolo == NULL) { 
+    subrotina_atual->procedimento.tipo_retorno = tipo;
+
+    #ifdef DEPURA
+    printf("[setar_tipo_variavel] setou tipo %d para %s\n", tipo, subrotina_atual->id);
+    #endif
+
+    return;
+  } 
+  
+  // Iterar todos os simbolos na pilha_simbolos_tipo_pendente
+  while ((simbolo = pilha_pop_simbolo(pilha_simbolos_tipo_pendente)) != NULL) {
+    if (simbolo->categoria == VARIAVEL_SIMPLES) {
+      simbolo->variavel.tipo = tipo;
+    } else if (simbolo->categoria == PARAMETRO_FORMAL_VALUE || simbolo->categoria == PARAMETRO_FORMAL_REF) {
+      simbolo->parametro.tipo = tipo;
+    } else if (simbolo->categoria == FUNCAO) {
+      simbolo->procedimento.tipo_retorno = tipo;
+    } else {
+      char erro[200];
+      sprintf(erro, "Tipo inválido para variável. [setar_tipo_variavel]");
+      imprimeErro(erro);
+    }
+    #ifdef DEPURA
+    printf("[setar_tipo_variavel] setou tipo %d para %s\n", tipo, simbolo->id);
+    #endif
+  }
+}
+
+void finaliza_cabecalho_subrot() {
+  subrotina_atual = NULL;
 }

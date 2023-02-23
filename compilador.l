@@ -308,6 +308,13 @@ write {
     return T_WRITE;
  }
 
+integer {
+   simbolo = simb_integer;
+   strncpy (token, yytext, TAM_TOKEN);
+   IMPRIME(" integer  ");
+   return T_INTEGER;
+}
+
 {pulo_linha} {nl++;}
 
 {descarte}

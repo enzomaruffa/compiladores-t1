@@ -32,6 +32,7 @@ simbolo_t* pilha_peek_simbolo(pilha_t *pilha);
 simbolo_t* pilha_get_by_id_simbolo(pilha_t *pilha, char *id);
 void pilha_print_simbolo(item_pilha_t *item);
 void print_simbolo(simbolo_t *s);
+int pilha_busca_duplicata_simbolo(pilha_t *pilha, char *id, int nivel_lexico);
 
 void pilha_push_label(pilha_t *pilha, char *label);
 char* pilha_pop_label(pilha_t *pilha);

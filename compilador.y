@@ -55,6 +55,7 @@ int num_vars;
 %token T_MAIOR_IGUAL
 %token T_READ
 %token T_WRITE
+%token T_INTEGER
 
 %nonassoc T_LOWER_THAN_ELSE
 %nonassoc T_ELSE
@@ -117,7 +118,7 @@ declara_var:
 ;
 
 tipo:
-   T_IDENT
+   T_INTEGER { setar_tipo_variavel(INTEGER); }
 ;
 
 lista_id_var:
@@ -141,6 +142,7 @@ declara_funcao:
    parametros_formais_subrot
    { finaliza_parametros_subrotina(); }
    T_DOIS_PONTOS tipo 
+   { finaliza_cabecalho_subrot(); }
    T_PONTO_E_VIRGULA 
    bloco
    { finaliza_subrot(); }
@@ -148,7 +150,7 @@ declara_funcao:
 declara_procedure:
    T_PROCEDURE { inicia_registro_subrot(); } T_IDENT { registrar_subrot(token, PROCEDIMENTO); }
    parametros_formais_subrot
-   { finaliza_parametros_subrotina(); }
+   { finaliza_parametros_subrotina(); finaliza_cabecalho_subrot(); }
    T_PONTO_E_VIRGULA
    bloco
    { finaliza_subrot(); }

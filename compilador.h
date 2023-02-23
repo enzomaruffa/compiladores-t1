@@ -59,15 +59,21 @@ typedef enum simbolos
   simb_maior_igual,
   simb_read,
   simb_write,
+  simb_integer
 } simbolos;
 
 typedef enum {
-    VARIAVEL_SIMPLES,
-    PARAMETRO_FORMAL_VALUE,
-    PARAMETRO_FORMAL_REF,
-    PROCEDIMENTO,
-    FUNCAO,
+  VARIAVEL_SIMPLES,
+  PARAMETRO_FORMAL_VALUE,
+  PARAMETRO_FORMAL_REF,
+  PROCEDIMENTO,
+  FUNCAO,
 } categoria_simbolo;
+
+typedef enum {
+  INTEGER
+} tipo_var;
+
 
 /* -------------------------------------------------------------------
  * variáveis globais
@@ -136,5 +142,8 @@ void finaliza_subrot();
 
 void verifica_se_pode_chamar_funcao();
 void proximo_parametro_chamada_subrot();
+
+void setar_tipo_variavel(tipo_var tipo);
+void finaliza_cabecalho_subrot();
 
 #endif

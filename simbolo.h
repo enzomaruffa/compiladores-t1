@@ -16,16 +16,18 @@ typedef struct simbolo {
     union {
         struct {
             int deslocamento;
+            tipo_var tipo;
         } variavel;
 
         struct {
             int deslocamento;
+            tipo_var tipo;
             struct simbolo *proximo_parametro;
         } parametro;
 
         struct {
             int deslocamento;
-            char tipo_retorno[20];
+            tipo_var tipo_retorno;
             char rotulo[4];
             struct simbolo *primeiro_parametro;
         } procedimento;
