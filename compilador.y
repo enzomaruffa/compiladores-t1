@@ -55,7 +55,10 @@ int num_vars;
 %token T_MAIOR_IGUAL
 %token T_READ
 %token T_WRITE
+%token T_WRITELN
 %token T_INTEGER
+%token T_FORWARD
+%token T_STRING
 
 %nonassoc T_LOWER_THAN_ELSE
 %nonassoc T_ELSE
@@ -267,12 +270,15 @@ lista_read:
 
 write:
    T_WRITE T_ABRE_PARENTESES lista_write T_FECHA_PARENTESES
+   | T_WRITELN T_ABRE_PARENTESES lista_write T_FECHA_PARENTESES
 
 lista_write:
    lista_write T_VIRGULA T_IDENT { escrever_simbolo(token); }
    | T_IDENT { escrever_simbolo(token); }
    | lista_write T_VIRGULA T_NUMERO { escrever_constante(token); }
    | T_NUMERO { escrever_constante(token); }
+   | lista_write T_VIRGULA T_STRING
+   | T_STRING
 
 while:
    T_WHILE { comecar_while(); }

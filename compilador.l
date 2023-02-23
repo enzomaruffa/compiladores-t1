@@ -40,6 +40,8 @@ numero [0-9]+
 
 comentario "(*".*"*)"
 
+string \'[^\']*\'
+
 %%
 
 {program} {
@@ -317,6 +319,20 @@ integer {
    return T_INTEGER;
 }
 
+forward {
+   simbolo = simb_forward;
+   strncpy (token, yytext, TAM_TOKEN);
+   IMPRIME(" forward  ");
+   return T_FORWARD;
+}
+
+writeln {
+   simbolo = simb_writeln;
+   strncpy (token, yytext, TAM_TOKEN);
+   IMPRIME(" writeln  ");
+   return T_WRITELN;
+}
+
 {pulo_linha} {nl++;}
 
 {descarte}
@@ -330,12 +346,18 @@ integer {
     return T_NUMERO;
  }
 
-
 {ident} {
     simbolo = simb_identificador;
     strncpy (token, yytext, TAM_TOKEN);
     IMPRIME(" ident  ");
     return T_IDENT;
+ }
+
+ {string} { 
+      simbolo = simb_string;
+      strncpy (token, yytext, TAM_TOKEN);
+      IMPRIME(" string ");
+      return T_STRING;
  }
 
 %%
