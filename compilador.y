@@ -173,7 +173,7 @@ declara_funcao:
    T_DOIS_PONTOS tipo 
    { finaliza_cabecalho_subrot(); }
    T_PONTO_E_VIRGULA 
-   bloco
+   forward_ou_bloco
    { finaliza_subrot(); }
 
 declara_procedure:
@@ -181,7 +181,7 @@ declara_procedure:
    parametros_formais_subrot
    { finaliza_parametros_subrotina(); finaliza_cabecalho_subrot(); }
    T_PONTO_E_VIRGULA
-   bloco
+   forward_ou_bloco
    { finaliza_subrot(); }
 
 parametros_formais_subrot:
@@ -207,6 +207,10 @@ lista_params_val:
     lista_params_val T_VIRGULA T_IDENT { registra_parametro(token, 0); }
     | T_IDENT { registra_parametro(token, 0); }
 ;
+
+forward_ou_bloco:
+   T_FORWARD {} T_PONTO_E_VIRGULA
+   | bloco
 
 comando_ou_composto:
    comando
