@@ -183,6 +183,10 @@ void empilha_tipo_simbolo(simbolo_t *simbolo) {
   tipo_var tipo;
   if (simbolo->categoria == VARIAVEL_SIMPLES) {
     tipo = simbolo->variavel.tipo;
+  } else if (simbolo->categoria == PARAMETRO_FORMAL_VALUE) {
+    tipo = simbolo->parametro.tipo;
+  } else if (simbolo->categoria == PARAMETRO_FORMAL_REF) {
+    tipo = simbolo->parametro.tipo;
   } else if (simbolo->categoria == FUNCAO) {
     tipo = simbolo->procedimento.tipo_retorno;
   } else {
