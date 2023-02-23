@@ -610,9 +610,18 @@ void finaliza_parametros_subrotina() {
 }
 
 void chamar_subrot() {
-  infos_chamada_subrot_t *chamada = pilha_pop_chamada_subrot(pilha_chamada_subrot);
-  simbolo_t *subrot = chamada->simbolo;
+  #ifdef DEPURA
+  printf("[chamar_subrot]\n");
+  #endif
 
+  infos_chamada_subrot_t *chamada = pilha_pop_chamada_subrot(pilha_chamada_subrot);
+  simbolo_t *subrot; 
+
+  if (chamada == NULL) {
+    subrot = get_simbolo_relevante_atual();
+  } else {
+    subrot = chamada->simbolo;
+  }
 
   // TODO: Verificar se o número de parâmetros está correto, comparando com o topo da pilha de chamada de subrotinas
 
