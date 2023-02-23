@@ -195,6 +195,7 @@ params_formais_rep:
 secao_de_params_formais:
     T_VAR lista_params_ref T_DOIS_PONTOS tipo
     | lista_params_val T_DOIS_PONTOS tipo
+    |
 ;
 
 lista_params_ref:
